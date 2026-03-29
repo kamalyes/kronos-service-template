@@ -1,0 +1,283 @@
+# =====================================================================
+# [[ .ServiceName ]] Service - Gateway 配置（开发环境）
+# =====================================================================
+
+module-name: gateway
+name: "[[ .ServiceName ]] Service Gateway (dev)"
+enabled: true
+debug: true
+version: "v1.0.0"
+environment: "dev"
+
+json:
+    use-proto-names: true
+    emit-unpopulated: true
+    discard-unknown: true
+
+http:
+    module-name: server
+    host: "0.0.0.0"
+    port: [[ .HTTPPort ]]
+    network: tcp4
+    read-timeout: 30
+    read-header-timeout: 5
+    write-timeout: 30
+    idle-timeout: 60
+    max-header-bytes: 1048576
+    enable-tls: false
+    headers:
+        x-server: [[ .ServiceName | lower ]]
+    enable-gzip-compress: true
+    gzip-compression-level: 5
+    gzip-min-size: 1024
+    enable-http2: true
+
+grpc:
+    server:
+        enable: true
+        host: "0.0.0.0"
+        port: [[ .GRPCPort ]]
+        network: tcp4
+        max-recv-msg-size: 4194304
+        max-send-msg-size: 4194304
+        keepalive-time: 120
+        keepalive-timeout: 10
+        connection-timeout: 20
+        enable-reflection: true
+    clients: {}
+
+cache:
+    module-name: cache
+    type: redis
+    enabled: [[ .UseRedis ]]
+    default-ttl: 24h
+    key-prefix: '[[ .CachePrefix ]]'
+    serializer: json
+    redis:
+        module-name: redis
+        addr: localhost:6379
+        password: ""
+        db: 0
+        max-retries: 3
+        pool-size: 10
+        cluster-mode: false
+
+database:
+    # 是否启用
+    enabled: false
+    # 关系型数据库配置
+    relational:
+        enabled: false
+        default: mysql
+        # MySQL配置
+        mysql:
+            module-name: mysql
+            host: localhost
+            port: "3306"
+            config: charset=utf8mb4&parseTime=True&loc=Local
+            log-level: info
+            slow-threshold: 100
+            ignore-record-not-found-error: false
+            db-name: [[ .DBName ]]
+            username: root
+            password: mysql_password
+            max-idle-conns: 10
+            max-open-conns: 100
+            conn-max-idle-time: 300
+            conn-max-life-time: 3600
+            skip-default-transaction: false
+            prepare-stmt: true
+            disable-foreign-key-constraint-when-migrating: true
+            disable-nested-transaction: false
+            allow-global-update: false
+            query-fields: true
+            create-batch-size: 100
+            singular-table: true
+        # PostgreSQL配置
+        postgresql:
+            module-name: postgresql
+            host: localhost
+            port: "5432"
+            config: sslmode=disable
+            log-level: info
+            slow-threshold: 100
+            ignore-record-not-found-error: false
+            db-name: [[ .DBName ]]
+            username: postgres
+            password: postgres_password
+            max-idle-conns: 10
+            max-open-conns: 100
+            conn-max-idle-time: 300
+            conn-max-life-time: 3600
+            skip-default-transaction: false
+            prepare-stmt: true
+            disable-foreign-key-constraint-when-migrating: true
+            disable-nested-transaction: false
+            allow-global-update: false
+            query-fields: true
+            create-batch-size: 100
+            singular-table: true
+        # SQLite配置
+        sqlite:
+            module-name: sqlite
+            config: _foreign_keys=on
+            log-level: info
+            slow-threshold: 100
+            ignore-record-not-found-error: false
+            db-path: ./data.db
+            vacuum: false
+            max-idle-conns: 10
+            max-open-conns: 1
+            conn-max-idle-time: 300
+            conn-max-life-time: 3600
+            skip-default-transaction: false
+            prepare-stmt: true
+            disable-foreign-key-constraint-when-migrating: true
+            disable-nested-transaction: false
+            allow-global-update: false
+            query-fields: true
+            create-batch-size: 100
+            singular-table: true
+        # CockroachDB配置
+        cockroachdb:
+            module-name: cockroachdb
+            host: localhost
+            port: "26257"
+            config: sslmode=disable
+            log-level: info
+            slow-threshold: 100
+            ignore-record-not-found-error: false
+            db-name: [[ .DBName ]]
+            username: root
+            password: ""
+            ssl-mode: disable
+            ssl-root-cert: ""
+            ssl-cert: ""
+            ssl-key: ""
+            application-name: go-config
+            max-idle-conns: 10
+            max-open-conns: 100
+            conn-max-idle-time: 300
+            conn-max-life-time: 3600
+            skip-default-transaction: false
+            prepare-stmt: true
+            disable-foreign-key-constraint-when-migrating: true
+            disable-nested-transaction: false
+            allow-global-update: false
+            query-fields: true
+            create-batch-size: 100
+            singular-table: true
+            max-retries: 3
+    # 非关系型数据库配置
+    non-relational:
+        enabled: false
+        default: clickhouse
+        # ClickHouse配置
+        clickhouse:
+            module-name: clickhouse
+            host: localhost
+            port: "9000"
+            config: dial_timeout=10s&read_timeout=20s
+            log-level: info
+            slow-threshold: 200
+            ignore-record-not-found-error: false
+            db-name: default
+            username: default
+            password: ""
+            protocol: native
+            cluster: ""
+            compress: true
+            debug: false
+            secure: false
+            dial-timeout: 10
+            read-timeout: 20
+            max-idle-conns: 5
+            max-open-conns: 20
+            conn-max-idle-time: 300
+            conn-max-life-time: 3600
+            skip-default-transaction: true
+            prepare-stmt: false
+            disable-foreign-key-constraint-when-migrating: true
+            disable-nested-transaction: true
+            allow-global-update: false
+            query-fields: true
+            create-batch-size: 1000
+            singular-table: true
+
+health:
+    module-name: health
+    enabled: true
+    path: /health
+    port: [[ .HealthPort ]]
+    timeout: 30
+
+middleware:
+    module-name: middleware
+    enabled: true
+    logging:
+        module-name: logging
+        enabled: true
+        level: debug
+        format: json
+        output: console
+        skip-paths:
+            - /health
+            - /metrics
+            - /ping
+        enable-request: true
+        enable-response: true
+        max-body-size: 4096
+        sensitive-mask: "***REDACTED***"
+        sensitive-keys:
+            - password
+            - token
+            - secret
+            - authorization
+    recovery:
+        module-name: recovery
+        enabled: true
+        enable-stack: true
+        print-stack: true
+    metrics:
+        module-name: metrics
+        enabled: true
+        path: /metrics
+        namespace: [[ .MetricsNamespace ]]
+        subsystem: gateway
+        skip-paths: [/health, /metrics, /swagger, /debug/pprof]
+    request-id:
+        module-name: requestid
+        enabled: true
+        header-name: X-Request-ID
+        generator: uuid
+    i18n:
+        module-name: i18n
+        enabled: true
+        default-language: en
+        supported-languages: [en, zh]
+        messages-path: ./locales
+        enable-fallback: true
+
+cors:
+    module-name: cors
+    allowed-origins: ['*']
+    allowed-methods: [GET, POST, PUT, DELETE, OPTIONS, PATCH, HEAD]
+    allowed-headers: ['*']
+    max-age: "86400"
+    allowed-all-origins: true
+    allowed-all-methods: true
+
+rate-limit:
+    module-name: ratelimit
+    enabled: true
+    strategy: token-bucket
+    default-scope: global
+    global-limit:
+        requests-per-second: 1000
+        burst-size: 2000
+        window-size: 1m0s
+        block-duration: 1m0s
+    storage:
+        type: memory
+        key-prefix: 'rate_limit:'
+        clean-interval: 1m

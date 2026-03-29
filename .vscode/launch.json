@@ -1,0 +1,74 @@
+{
+  "version": "0.2.0",
+  "configurations": [
+    {
+      "name": "Run Local [[ .ServiceName ]] Service",
+      "type": "go",
+      "request": "launch",
+      "mode": "auto",
+      "cwd": "${workspaceFolder}",
+      "program": "${workspaceFolder}/main.go",
+      "args": [],
+      "windows": {
+        "env": {
+          "GOARCH": "amd64",
+          "GOOS": "windows",
+          "APP_ENV": "local"
+        }
+      },
+      "osx": {
+        "env": {
+          "GOARCH": "arm64",
+          "GOOS": "darwin",
+          "APP_ENV": "local"
+        }
+      }
+    },
+    {
+      "name": "Run Dev [[ .ServiceName ]] Service",
+      "type": "go",
+      "request": "launch",
+      "mode": "auto",
+      "cwd": "${workspaceFolder}",
+      "program": "${workspaceFolder}/main.go",
+      "args": [],
+      "windows": {
+        "env": {
+          "GOARCH": "amd64",
+          "GOOS": "windows",
+          "APP_ENV": "dev"
+        }
+      },
+      "osx": {
+        "env": {
+          "GOARCH": "arm64",
+          "GOOS": "darwin",
+          "APP_ENV": "dev"
+        }
+      }
+    },
+    {
+      "name": "Run Test [[ .ServiceName ]] Service",
+      "type": "go",
+      "request": "launch",
+      "mode": "auto",
+      "cwd": "${workspaceFolder}",
+      "program": "${workspaceFolder}/main.go",
+      "args": [],
+      "windows": {
+        "env": {
+          "GOARCH": "amd64",
+          "GOOS": "windows",
+          "APP_ENV": "test"
+        }
+      },
+      "osx": {
+        "env": {
+          "GOARCH": "arm64",
+          "GOOS": "darwin",
+          "APP_ENV": "test"
+        }
+      }
+    }
+  ]
+}

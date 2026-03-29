@@ -1,0 +1,19 @@
+{
+  "welcome": "Добро пожаловать",
+  "success": "Успешно",
+  "hello": "Здравствуйте",
+  "goodbye": "До свидания",
+  "error.internal": "Внутренняя ошибка сервера",
+  "error.invalid_argument": "Недопустимый аргумент",
+  "error.unauthenticated": "Не аутентифицирован",
+  "error.permission_denied": "Доступ запрещён",
+  "error.not_found": "Ресурс не найден",
+  "error.conflict": "Конфликт ресурсов",
+  "error.validation_failed": "Ошибка проверки",
+  "error.invalid_parameter": "Недопустимый параметр",
+  "error.cannot_be_self": "Нельзя оперировать над собой",
+  "error.database_operation_failed": "Ошибка операции базы данных",
+  "error.database_error": "Ошибка базы данных",
+  "error.conversion_failed": "Ошибка преобразования",
+  "error.repository_not_initialized": "Репозиторий не инициализирован"
+}

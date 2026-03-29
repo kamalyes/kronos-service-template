@@ -1,0 +1,19 @@
+{
+  "welcome": "欢迎",
+  "success": "成功",
+  "hello": "你好",
+  "goodbye": "再见",
+  "error.internal": "内部服务器错误",
+  "error.invalid_argument": "无效的参数",
+  "error.unauthenticated": "未认证（未登录）",
+  "error.permission_denied": "权限不足",
+  "error.not_found": "资源未找到",
+  "error.conflict": "资源冲突",
+  "error.validation_failed": "数据验证失败",
+  "error.invalid_parameter": "无效的请求参数",
+  "error.cannot_be_self": "操作对象不能是自身",
+  "error.database_operation_failed": "数据库操作失败",
+  "error.database_error": "数据库错误",
+  "error.conversion_failed": "转换失败",
+  "error.repository_not_initialized": "仓库未初始化"
+}

@@ -1,0 +1,19 @@
+{
+  "welcome": "Selamat datang",
+  "success": "Berhasil",
+  "hello": "Halo",
+  "goodbye": "Selamat tinggal",
+  "error.internal": "Kesalahan server internal",
+  "error.invalid_argument": "Argumen tidak valid",
+  "error.unauthenticated": "Tidak terautentikasi",
+  "error.permission_denied": "Izin ditolak",
+  "error.not_found": "Sumber daya tidak ditemukan",
+  "error.conflict": "Konflik sumber daya",
+  "error.validation_failed": "Validasi gagal",
+  "error.invalid_parameter": "Parameter tidak valid",
+  "error.cannot_be_self": "Tidak dapat beroperasi pada diri sendiri",
+  "error.database_operation_failed": "Operasi basis data gagal",
+  "error.database_error": "Kesalahan basis data",
+  "error.conversion_failed": "Konversi gagal",
+  "error.repository_not_initialized": "Repositori tidak diinisialisasi"
+}

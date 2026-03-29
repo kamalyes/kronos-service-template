@@ -1,0 +1,19 @@
+{
+  "welcome": "Welcome",
+  "success": "Success",
+  "hello": "Hello",
+  "goodbye": "Goodbye",
+  "error.internal": "Internal server error",
+  "error.invalid_argument": "Invalid argument",
+  "error.unauthenticated": "Unauthenticated",
+  "error.permission_denied": "Permission denied",
+  "error.not_found": "Resource not found",
+  "error.conflict": "Resource conflict",
+  "error.validation_failed": "Validation failed",
+  "error.invalid_parameter": "Invalid parameter",
+  "error.cannot_be_self": "Cannot operate on yourself",
+  "error.database_operation_failed": "Database operation failed",
+  "error.database_error": "Database error",
+  "error.conversion_failed": "Conversion failed",
+  "error.repository_not_initialized": "Repository not initialized"
+}

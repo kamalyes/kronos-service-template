@@ -1,0 +1,156 @@
+name: kronos-service
+description: kronos 微服务脚手架模板 - Go gRPC 微服务
+version: 1.0.0
+author: kamalyes
+tags: [go, grpc, microservice, kronos]
+
+delimiters:
+  - "[["
+  - "]]"
+
+questions:
+  - name: OrgName
+    prompt: 组织名称（如 kamalyes，用于 Go 模块路径 github.com/{org}/{project}）
+    type: string
+    default: kamalyes
+    required: true
+
+  - name: ObjectPrefix
+    prompt: 组织前缀（如 kronos，用于项目名 {prefix}-{type}-service）
+    type: string
+    default: kronos
+    required: true
+
+  - name: ServiceType
+    prompt: 服务类型标识（如 open/payment/core，用于项目名 {prefix}-{type}-service）
+    type: string
+    default: my
+    required: true
+
+  - name: ServiceName
+    prompt: 服务名称（PascalCase，如 PaymentService）
+    type: string
+    default: "[[ .ServiceType | pascal ]]Service"
+    required: true
+
+  - name: ModuleName
+    prompt: 模块名称（小写，如 payment-service）
+    type: string
+    default: "[[ .ServiceType ]]-service"
+    required: true
+
+  - name: ProjectName
+    prompt: 项目名称（如 kronos-payment-service）
+    type: string
+    default: "[[ .ObjectPrefix ]]-[[ .ServiceType ]]-service"
+    required: true
+
+  - name: AuthorName
+    prompt: 作者名称
+    type: string
+    default: kamalyes
+    required: true
+
+  - name: AuthorEmail
+    prompt: 作者邮箱
+    type: string
+    default: example@qq.com
+    required: true
+
+  - name: GoVersion
+    prompt: Go 版本
+    type: select
+    choices: ["1.22", "1.23", "1.24", "1.25"]
+    default: "1.25"
+
+  - name: GatewayPrefix
+    prompt: 网关配置前缀（如 gateway-payment）
+    type: string
+    default: "gateway-[[ .ServiceType ]]"
+    required: true
+
+  - name: GRPCPort
+    prompt: gRPC 端口
+    type: int
+    default: "9190"
+
+  - name: HTTPPort
+    prompt: HTTP 端口
+    type: int
+    default: "8190"
+
+  - name: HealthPort
+    prompt: 健康检查端口
+    type: int
+    default: "8191"
+
+  - name: DBName
+    prompt: 数据库名称
+    type: string
+    default: "[[ .ServiceType | snake ]]_service"
+    required: true
+
+  - name: CachePrefix
+    prompt: 缓存键前缀
+    type: string
+    default: "[[ .ServiceType | snake ]]:"
+    required: true
+
+  - name: MetricsNamespace
+    prompt: 监控指标命名空间
+    type: string
+    default: "[[ .ServiceType | snake ]]"
+    required: true
+
+  - name: UseRedis
+    prompt: 是否使用 Redis
+    type: bool
+    default: "true"
+
+  - name: UseAuthInterceptor
+    prompt: 是否启用认证拦截器
+    type: bool
+    default: "true"
+
+  - name: UseSubscriber
+    prompt: 是否启用事件订阅
+    type: bool
+    default: "false"
+
+  - name: GenerateExample
+    prompt: 是否生成示例 Model/Repository/Service 文件
+    type: bool
+    default: "true"
+
+  - name: ExampleName
+    prompt: 示例实体名称（PascalCase，如 Tenant）
+    type: string
+    default: Demo
+    required: true
+
+  - name: ShareProtoModule
+    prompt: 共享Proto模块路径
+    type: string
+    default: "github.com/[[ .OrgName ]]/[[ .ObjectPrefix ]]-share-proto"
+    required: true
+
+ignore:
+  - "kopy.yaml"
+  - ".git/**"
+  - "*.md"
+
+rename:
+  - pattern: "__project_name__"
+    value: "[[ .ProjectName ]]"
+  - pattern: "__service_name__"
+    value: "[[ .ServiceName | snake ]]"
+  - pattern: "__module_name__"
+    value: "[[ .ModuleName ]]"
+  - pattern: "__example_name__"
+    value: "[[ .ExampleName | snake ]]"
+  - pattern: "__gateway_prefix__"
+    value: "[[ .GatewayPrefix ]]"
+
+hooks:
+  after:
+    - go mod tidy

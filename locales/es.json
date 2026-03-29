@@ -1,0 +1,19 @@
+{
+  "welcome": "Bienvenido",
+  "success": "Éxito",
+  "hello": "Hola",
+  "goodbye": "Adiós",
+  "error.internal": "Error interno del servidor",
+  "error.invalid_argument": "Argumento inválido",
+  "error.unauthenticated": "No autenticado",
+  "error.permission_denied": "Permiso denegado",
+  "error.not_found": "Recurso no encontrado",
+  "error.conflict": "Conflicto de recurso",
+  "error.validation_failed": "Validación fallida",
+  "error.invalid_parameter": "Parámetro inválido",
+  "error.cannot_be_self": "No puede operar sobre sí mismo",
+  "error.database_operation_failed": "Operación de base de datos fallida",
+  "error.database_error": "Error de base de datos",
+  "error.conversion_failed": "Conversión fallida",
+  "error.repository_not_initialized": "Repositorio no inicializado"
+}
