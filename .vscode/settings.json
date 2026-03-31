@@ -10,7 +10,7 @@
         "LastEditTime": "Do not edit",
         "FilePath": "Do not edit",
         "Description": "",
-        "custom_string_obkoro1_copyright": "Copyright (c) ${now_year} by [[ .AuthorName ]], All Rights Reserved. "
+        "custom_string_obkoro1_copyright": "Copyright (c) ${now_year} by <% .AuthorName %>, All Rights Reserved. "
     },
     "fileheader.cursorMode": {
         "description": "",

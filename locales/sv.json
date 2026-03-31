@@ -2,18 +2,5 @@
   "welcome": "Välkommen",
   "success": "Lyckades",
   "hello": "Hej",
-  "goodbye": "Hejdå",
-  "error.internal": "Internt serverfel",
-  "error.invalid_argument": "Ogiltigt argument",
-  "error.unauthenticated": "Ej autentiserad",
-  "error.permission_denied": "Åtkomst nekad",
-  "error.not_found": "Resurs hittades inte",
-  "error.conflict": "Resurskonflikt",
-  "error.validation_failed": "Validering misslyckades",
-  "error.invalid_parameter": "Ogiltig parameter",
-  "error.cannot_be_self": "Kan inte operera på dig själv",
-  "error.database_operation_failed": "Databasoperation misslyckades",
-  "error.database_error": "Databasfel",
-  "error.conversion_failed": "Konvertering misslyckades",
-  "error.repository_not_initialized": "Repository inte initierat"
+  "goodbye": "Hejdå"
 }

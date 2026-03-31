@@ -1,12 +1,12 @@
 /*
- * @Author: [[ .AuthorName ]] [[ .AuthorEmail ]]
- * @Date: [[ nowFmt "2006-01-02" ]] 00:00:00
+ * @Author: <% .AuthorName %> <% .AuthorEmail %>
+ * @Date: <% nowFmt "2006-01-02" %> 00:00:00
  * @LastEditors: kamalyes 501893067@qq.com
- * @LastEditTime: [[ nowFmt "2006-01-02" ]] 00:00:00
- * @FilePath: \[[ .ProjectName ]]\repository\factory.go
+ * @LastEditTime: <% nowFmt "2006-01-02" %> 00:00:00
+ * @FilePath: \<% .ProjectName %>\repository\factory.go
  * @Description: 仓库工厂，统一管理所有仓库实例
  *
- * Copyright (c) [[ .Year ]] by [[ .AuthorName ]], All Rights Reserved.
+ * Copyright (c) <% .Year %> by <% .AuthorName %>, All Rights Reserved.
  */
 package repository
 
@@ -19,11 +19,11 @@ import (
 
 // RepositoryFactory 仓库工厂结构体
 type RepositoryFactory struct {
-[[- if eq .GenerateExample "true" ]]
-	[[ .ExampleName ]] *[[ .ExampleName ]]Repository
-[[- else ]]
+<%- if eq .GenerateExample "true" %>
+	<% .ExampleName %> *<% .ExampleName %>Repository
+<%- else %>
 	// TODO: 添加仓库字段
-[[- end ]]
+<%- end %>
 }
 
 var (
@@ -35,11 +35,11 @@ var (
 func NewRepositoryFactory() *RepositoryFactory {
 	factoryOnce.Do(func() {
 		factoryInstance = &RepositoryFactory{
-[[- if eq .GenerateExample "true" ]]
-			[[ .ExampleName ]]: New[[ .ExampleName ]]Repository(),
-[[- else ]]
+<%- if eq .GenerateExample "true" %>
+			<% .ExampleName %>: New<% .ExampleName %>Repository(),
+<%- else %>
 			// TODO: 初始化仓库
-[[- end ]]
+<%- end %>
 		}
 	})
 	return factoryInstance

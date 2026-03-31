@@ -1,6 +1,6 @@
-# [[ .ObjectPrefix ]] [[ .ServiceName ]] 微服务
+# <% .ObjectPrefix %> <% .ServiceName %> 微服务
 
-> 基于 Go gRPC 的 [[ .ServiceName ]] 微服务，使用 go-rpc-gateway 框架提供 gRPC + HTTP 双协议支持
+> 基于 Go gRPC 的 <% .ServiceName %> 微服务，使用 go-rpc-gateway 框架提供 gRPC + HTTP 双协议支持
 
 ## ✨ 功能特性
 
@@ -26,7 +26,7 @@
 ├── constants/                  # 常量定义
 │   └── service_name.go         # 服务名称常量
 ├── docs/                       # 文档目录
-├── errors/                     # 错误定义
+├── __ai_home__/                # AI 规范，渲染时改名成 .trae / .claude / .cursor / .vscode
 │   ├── codes.go                # 业务错误码常量
 │   ├── errors.go               # i18n 错误构造函数
 │   └── grpc.go                 # gRPC 错误码映射
@@ -48,11 +48,10 @@
 │   ├── factory.go              # RepositoryFactory 单例
 │   └── __example_name___repository.go  # 示例仓库（可选）
 ├── resources/                   # 配置文件
-│   ├── __gateway_prefix__-dev.yaml     # 开发环境配置
-│   └── __gateway_prefix__-local.yaml   # 本地环境配置
+│   └── __gateway_prefix__-dev.yaml     # 唯一环境配置；新增环境见下方说明
 ├── service/                     # 业务逻辑层
 │   ├── idgen.go                # Snowflake ID 生成器
-│   ├── __service_name___service.go  # 主服务实现
+│   ├── __service_name__.go     # 主服务实现
 │   └── __example_name___service.go  # 示例服务（可选）
 ├── .gitignore
 ├── .golangci.yml
@@ -76,7 +75,7 @@ go install github.com/kamalyes/kopy@latest
 #### 交互模式
 
 ```bash
-kopy new git@github.com:kamalyes/kronos-service-template.git -o ./[[ .ProjectName ]]
+kopy new git@github.com:kamalyes/kronos-service-template.git -o ./<% .ProjectName %>
 ```
 
 交互式问答示例：
@@ -111,7 +110,7 @@ kopy new git@github.com:kamalyes/kronos-service-template.git -o ./[[ .ProjectNam
 使用 `--var` 参数跳过交互式问答：
 
 ```bash
-kopy new git@github.com:kamalyes/kronos-service-template.git -o ./[[ .ProjectName ]] \
+kopy new git@github.com:kamalyes/kronos-service-template.git -o ./<% .ProjectName %> \
   --var OrgName=kamalyes \
   --var ObjectPrefix=kronos \
   --var ServiceType=payment \
@@ -148,7 +147,7 @@ kopy new ./kronos-service-template --dry-run --var OrgName=kamalyes --var Object
 ### 3. 生成后步骤
 
 ```bash
-cd [[ .ProjectName ]]
+cd <% .ProjectName %>
 
 # 1. 安装依赖
 go mod tidy
@@ -167,35 +166,36 @@ go run main.go
 | `OrgName` | string | `kamalyes` | 组织名称，用于 Go 模块路径 `github.com/{org}/{project}` |
 | `ObjectPrefix` | string | `kronos` | 组织前缀，用于项目名 `{prefix}-{type}-service` |
 | `ServiceType` | string | `my` | 服务类型标识，如 open/payment/core |
-| `ServiceName` | string | `[[ .ServiceType \| pascal ]]Service` | 服务名称（PascalCase） |
-| `ModuleName` | string | `[[ .ServiceType ]]-service` | 模块名称（小写） |
-| `ProjectName` | string | `[[ .ObjectPrefix ]]-[[ .ServiceType ]]-service` | 项目名称 |
+| `ServiceName` | string | `<% .ServiceType \| pascal %>Service` | 服务名称（PascalCase） |
+| `ModuleName` | string | `<% .ServiceType %>-service` | 模块名称（小写） |
+| `ProjectName` | string | `<% .ObjectPrefix %>-<% .ServiceType %>-service` | 项目名称 |
 | `AuthorName` | string | `kamalyes` | 作者名称 |
 | `AuthorEmail` | string | `example@qq.com` | 作者邮箱 |
 | `GoVersion` | select | `1.25` | Go 版本（1.22/1.23/1.24/1.25） |
-| `GatewayPrefix` | string | `gateway-[[ .ServiceType ]]` | 网关配置前缀 |
+| `GatewayPrefix` | string | `gateway-<% .ServiceType %>` | 网关配置前缀 |
 | `GRPCPort` | int | `9190` | gRPC 端口 |
 | `HTTPPort` | int | `8190` | HTTP 端口 |
 | `HealthPort` | int | `8191` | 健康检查端口 |
-| `DBName` | string | `[[ .ServiceType \| snake ]]_service` | 数据库名称 |
-| `CachePrefix` | string | `[[ .ServiceType \| snake ]]:` | 缓存键前缀 |
-| `MetricsNamespace` | string | `[[ .ServiceType \| snake ]]` | 监控指标命名空间 |
+| `DBName` | string | `<% .ServiceType \| snake %>_service` | 数据库名称 |
+| `CachePrefix` | string | `<% .ServiceType \| snake %>:` | 缓存键前缀 |
+| `MetricsNamespace` | string | `<% .ServiceType \| snake %>` | 监控指标命名空间 |
 | `UseRedis` | bool | `true` | 是否使用 Redis |
 | `UseAuthInterceptor` | bool | `true` | 是否启用认证拦截器 |
 | `UseSubscriber` | bool | `false` | 是否启用事件订阅 |
 | `GenerateExample` | bool | `true` | 是否生成示例 Model/Repository/Service |
 | `ExampleName` | string | `Demo` | 示例实体名称（PascalCase） |
-| `ShareProtoModule` | string | `github.com/[[ .OrgName ]]/[[ .ObjectPrefix ]]-share-proto` | 共享 Proto 模块路径 |
+| `ShareProtoModule` | string | `github.com/<% .OrgName %>/<% .ObjectPrefix %>-share-proto` | 共享 Proto 模块路径 |
 
 ## 🔄 文件重命名规则
 
 | 模式 | 替换为 | 说明 |
 |------|--------|------|
-| `__project_name__` | `[[ .ProjectName ]]` | 项目名称 |
-| `__service_name__` | `[[ .ServiceName \| snake ]]` | 服务名称（蛇形） |
-| `__module_name__` | `[[ .ModuleName ]]` | 模块名称 |
-| `__example_name__` | `[[ .ExampleName \| snake ]]` | 示例实体名称（蛇形） |
-| `__gateway_prefix__` | `[[ .GatewayPrefix ]]` | 网关配置前缀 |
+| `__project_name__` | `<% .ProjectName %>` | 项目名称 |
+| `__service_name__` | `<% .ServiceName \| snake %>` | 服务名称（蛇形） |
+| `__module_name__` | `<% .ModuleName %>` | 模块名称 |
+| `__example_name__` | `<% .ExampleName \| snake %>` | 示例实体名称（蛇形） |
+| `__gateway_prefix__` | `<% .GatewayPrefix %>` | 网关配置前缀 |
+| `__ai_home__` | `<% .AiAssistant %>` | AI 规范目录（.trae / .claude / .cursor / .vscode）|
 
 ## 🔤 命名转换函数
 

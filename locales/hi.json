@@ -2,18 +2,5 @@
   "welcome": "स्वागत है",
   "success": "सफलता",
   "hello": "नमस्ते",
-  "goodbye": "अलविदा",
-  "error.internal": "आंतरिक सर्वर त्रुटि",
-  "error.invalid_argument": "अमान्य तर्क",
-  "error.unauthenticated": "प्रमाणित नहीं",
-  "error.permission_denied": "अनुमति अस्वीकृत",
-  "error.not_found": "संसाधन नहीं मिला",
-  "error.conflict": "संसाधन संघर्ष",
-  "error.validation_failed": "सत्यापन विफल",
-  "error.invalid_parameter": "अमान्य पैरामीटर",
-  "error.cannot_be_self": "स्वयं पर कार्रवाई नहीं कर सकते",
-  "error.database_operation_failed": "डेटाबेस ऑपरेशन विफल",
-  "error.database_error": "डेटाबेस त्रुटि",
-  "error.conversion_failed": "रूपांतरण विफल",
-  "error.repository_not_initialized": "रिपॉजिटरी प्रारंभ नहीं हुई"
+  "goodbye": "अलविदा"
 }

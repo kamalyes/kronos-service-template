@@ -76,7 +76,7 @@
 ```go
 import (
     gatewayMiddleware "github.com/kamalyes/go-rpc-gateway/middleware"
-    "github.com/[[ .ObjectPrefix ]]/[[ .ObjectPrefix ]]/[[ .ServiceName ]]/errors"
+    "github.com/<% .ObjectPrefix %>/<% .ObjectPrefix %>/<% .ServiceName %>/errors"
 )
 ```
 

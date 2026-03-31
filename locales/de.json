@@ -2,18 +2,5 @@
   "welcome": "Willkommen",
   "success": "Erfolg",
   "hello": "Hallo",
-  "goodbye": "Auf Wiedersehen",
-  "error.internal": "Interner Serverfehler",
-  "error.invalid_argument": "Ungültiges Argument",
-  "error.unauthenticated": "Nicht authentifiziert",
-  "error.permission_denied": "Berechtigung verweigert",
-  "error.not_found": "Ressource nicht gefunden",
-  "error.conflict": "Ressourcenkonflikt",
-  "error.validation_failed": "Validierung fehlgeschlagen",
-  "error.invalid_parameter": "Ungültiger Parameter",
-  "error.cannot_be_self": "Kann nicht auf sich selbst operieren",
-  "error.database_operation_failed": "Datenbankoperation fehlgeschlagen",
-  "error.database_error": "Datenbankfehler",
-  "error.conversion_failed": "Konvertierung fehlgeschlagen",
-  "error.repository_not_initialized": "Repository nicht initialisiert"
+  "goodbye": "Auf Wiedersehen"
 }

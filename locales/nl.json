@@ -2,18 +2,5 @@
   "welcome": "Welkom",
   "success": "Succes",
   "hello": "Hallo",
-  "goodbye": "Tot ziens",
-  "error.internal": "Interne serverfout",
-  "error.invalid_argument": "Ongeldig argument",
-  "error.unauthenticated": "Niet geauthenticeerd",
-  "error.permission_denied": "Toestemming geweigerd",
-  "error.not_found": "Bron niet gevonden",
-  "error.conflict": "Bronconflict",
-  "error.validation_failed": "Validatie mislukt",
-  "error.invalid_parameter": "Ongeldige parameter",
-  "error.cannot_be_self": "Kan niet op uzelf opereren",
-  "error.database_operation_failed": "Databasebewerking mislukt",
-  "error.database_error": "Databasefout",
-  "error.conversion_failed": "Conversie mislukt",
-  "error.repository_not_initialized": "Repository niet geïnitialiseerd"
+  "goodbye": "Tot ziens"
 }

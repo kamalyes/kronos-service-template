@@ -1,12 +1,12 @@
 /*
- * @Author: [[ .AuthorName ]] [[ .AuthorEmail ]]
- * @Date: [[ nowFmt "2006-01-02" ]] 00:00:00
- * @LastEditors: [[ .AuthorName ]] [[ .AuthorEmail ]]
- * @LastEditTime: [[ nowFmt "2006-01-02" ]] 00:00:00
- * @FilePath: \[[ .ProjectName ]]\migrations\migrate.go
+ * @Author: <% .AuthorName %> <% .AuthorEmail %>
+ * @Date: <% nowFmt "2006-01-02" %> 00:00:00
+ * @LastEditors: <% .AuthorName %> <% .AuthorEmail %>
+ * @LastEditTime: <% nowFmt "2006-01-02" %> 00:00:00
+ * @FilePath: \<% .ProjectName %>\migrations\migrate.go
  * @Description: 数据库种子数据迁移
  *
- * Copyright (c) [[ .Year ]] by [[ .AuthorName ]], All Rights Reserved.
+ * Copyright (c) <% .Year %> by <% .AuthorName %>, All Rights Reserved.
  */
 
 package migrations

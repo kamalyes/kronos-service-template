@@ -2,18 +2,5 @@
   "welcome": "Hoş geldiniz",
   "success": "Başarılı",
   "hello": "Merhaba",
-  "goodbye": "Hoşça kalın",
-  "error.internal": "Dahili sunucu hatası",
-  "error.invalid_argument": "Geçersiz argüman",
-  "error.unauthenticated": "Kimliği doğrulanmamış",
-  "error.permission_denied": "İzin reddedildi",
-  "error.not_found": "Kaynak bulunamadı",
-  "error.conflict": "Kaynak çakışması",
-  "error.validation_failed": "Doğrulama başarısız",
-  "error.invalid_parameter": "Geçersiz parametre",
-  "error.cannot_be_self": "Kendinize işlem yapamazsınız",
-  "error.database_operation_failed": "Veritabanı işlemi başarısız",
-  "error.database_error": "Veritabanı hatası",
-  "error.conversion_failed": "Dönüştürme başarısız",
-  "error.repository_not_initialized": "Depo başlatılmadı"
+  "goodbye": "Hoşça kalın"
 }

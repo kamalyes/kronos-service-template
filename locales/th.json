@@ -2,18 +2,5 @@
   "welcome": "ยินดีต้อนรับ",
   "success": "สำเร็จ",
   "hello": "สวัสดี",
-  "goodbye": "ลาก่อน",
-  "error.internal": "ข้อผิดพลาดภายในเซิร์ฟเวอร์",
-  "error.invalid_argument": "อาร์กิวเมนต์ไม่ถูกต้อง",
-  "error.unauthenticated": "ไม่ได้รับการยืนยันตัวตน",
-  "error.permission_denied": "สิทธิ์ถูกปฏิเสธ",
-  "error.not_found": "ไม่พบทรัพยากร",
-  "error.conflict": "ข้อขัดแย้งของทรัพยากร",
-  "error.validation_failed": "การตรวจสอบล้มเหลว",
-  "error.invalid_parameter": "พารามิเตอร์ไม่ถูกต้อง",
-  "error.cannot_be_self": "ไม่สามารถดำเนินการกับตัวเองได้",
-  "error.database_operation_failed": "การดำเนินการฐานข้อมูลล้มเหลว",
-  "error.database_error": "ข้อผิดพลาดของฐานข้อมูล",
-  "error.conversion_failed": "การแปลงล้มเหลว",
-  "error.repository_not_initialized": "Repository ไม่ได้เริ่มต้น"
+  "goodbye": "ลาก่อน"
 }

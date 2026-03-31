@@ -2,18 +2,5 @@
   "welcome": "Bienvenue",
   "success": "Succès",
   "hello": "Bonjour",
-  "goodbye": "Au revoir",
-  "error.internal": "Erreur interne du serveur",
-  "error.invalid_argument": "Argument invalide",
-  "error.unauthenticated": "Non authentifié",
-  "error.permission_denied": "Permission refusée",
-  "error.not_found": "Ressource non trouvée",
-  "error.conflict": "Conflit de ressource",
-  "error.validation_failed": "Échec de la validation",
-  "error.invalid_parameter": "Paramètre invalide",
-  "error.cannot_be_self": "Impossible de s'opérer soi-même",
-  "error.database_operation_failed": "Échec de l'opération de base de données",
-  "error.database_error": "Erreur de base de données",
-  "error.conversion_failed": "Échec de la conversion",
-  "error.repository_not_initialized": "Dépôt non initialisé"
+  "goodbye": "Au revoir"
 }

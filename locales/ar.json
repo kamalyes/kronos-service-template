@@ -2,18 +2,5 @@
   "welcome": "أهلاً بك",
   "success": "نجاح",
   "hello": "مرحباً",
-  "goodbye": "مع السلامة",
-  "error.internal": "خطأ داخلي في الخادم",
-  "error.invalid_argument": "وسيط غير صالح",
-  "error.unauthenticated": "غير مصادق عليه",
-  "error.permission_denied": "إذن مرفوض",
-  "error.not_found": "المورد غير موجود",
-  "error.conflict": "تعارض في المورد",
-  "error.validation_failed": "فشل التحقق",
-  "error.invalid_parameter": "معلمة غير صالحة",
-  "error.cannot_be_self": "لا يمكن العمل على نفسك",
-  "error.database_operation_failed": "فشلت عملية قاعدة البيانات",
-  "error.database_error": "خطأ في قاعدة البيانات",
-  "error.conversion_failed": "فشل التحويل",
-  "error.repository_not_initialized": "المستودع غير مهيأ"
+  "goodbye": "مع السلامة"
 }

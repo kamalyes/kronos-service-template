@@ -1,156 +1,334 @@
+# ============================================================================
+# kopy 模板配置 | kopy template configuration
+#
+# 用法 | Usage:
+#   kopy new https://github.com/kamalyes/kronos-service-template -o ./my-service
+#   kopy list ./kronos-service-template          # 查看全部变量 | inspect variables
+#
+# ⚠️ 定界符是 <% %>，不是 kopy 默认的 [[ ]] | Delimiters are <% %>, NOT the default
+#
+# 原因：bash 的条件测试语法本身就是双方括号（if [[ -t 1 ]]），字符类也是（[[:space:]]），
+# 与 kopy 默认定界符 [[ ]] 冲突。用默认定界符时 scripts/init.sh 直接渲染失败，
+# 报 `bad number syntax: "-t"`——模板引擎把 [[ -t 1 ]] 当成了模板动作。
+# 换成 <% %> 后，生产仓库里的 shell 脚本可以逐字节同步进来，不必为模板引擎
+# 把 [[ ]] 改写成 [ ]（改写会悄悄改变语义，比如 =~ 和 && 的行为）。
+# 与 kronos-share-proto-template 用同一套定界符。
+#
+# [EN] Reason: bash's own test syntax uses double brackets (if [[ -t 1 ]]), as do character
+# classes ([[:space:]]), which collide with kopy's default [[ ]]; scripts/init.sh then fails
+# to render with `bad number syntax: "-t"`. With <% %>, shell scripts from a real repository
+# sync in byte for byte. Same delimiters as kronos-share-proto-template.
+#
+# 渲染规则 | Rendering rules:
+#   - 文件「内容」和「路径」都会过模板引擎
+#   - 变量值一律是字符串，判断布尔要写 eq .X "true"
+#   - 执行顺序是先 rename 再 ignore，且 ignore 判定看的是渲染后的路径
+#
+# [EN] Delimiters are kopy's default <% %>; both file contents and paths are rendered.
+# Every value is a string, so booleans are compared via eq .X "true".
+# rename runs before ignore, and ignore matches the RENDERED path.
+#
+# ⚠️ 最低 kopy 版本 | Minimum kopy version
+#
+# 本模板用到三项在旧版 kopy 上不成立的行为，用旧版生成会静默出错：
+#   1. 问题的 default 可以引用前面已答的变量（旧版渲染 default 时上下文为空，
+#      会得到 <no value>，带过滤器的还会把模板原文当成答案）；
+#   2. ignore 模式本身会被渲染（否则下面按变量条件性排除文件的规则全部失效，
+#      GenerateExample=false 之类的开关会变成空开关）；
+#   3. hooks.after 会被执行（否则生成后不会自动初始化）
+# 这三项在 kopy 的 0946879 / 09b74c8 / bc22c45 三个提交里修好
+#
+# [EN] This template relies on three behaviours that older kopy builds lack, and an older
+# build fails silently: defaults may reference earlier answers; ignore patterns are
+# themselves rendered (otherwise every conditional exclusion below is a no-op); and
+# hooks.after is executed.
+# ============================================================================
+
 name: kronos-service
-description: kronos 微服务脚手架模板 - Go gRPC 微服务
-version: 1.0.0
+description: kronos 微服务脚手架模板 - Go gRPC 微服务，接协议中心、pbmo 转换、sqlbuilder 仓储、go-bizerror 错误与 go-argus 校验 | Go gRPC microservice scaffold wired to a contract hub, with pbmo conversion, sqlbuilder repositories, go-bizerror errors and go-argus validation
+version: 2.0.0
 author: kamalyes
-tags: [go, grpc, microservice, kronos]
+tags: [go, grpc, microservice, kronos, pbmo, sqlbuilder]
 
 delimiters:
-  - "[["
-  - "]]"
+  - "<%"
+  - "%>"
 
 questions:
+  # --------------------------------------------------------------------------
+  # 项目身份 | Project identity
+  #
+  # 下面几个 default 引用前面的答案，顺序不能打乱：被引用的问题必须排在前面
+  # [EN] Several defaults below reference earlier answers, so the order matters:
+  # a referenced question must come first.
+  # --------------------------------------------------------------------------
   - name: OrgName
-    prompt: 组织名称（如 kamalyes，用于 Go 模块路径 github.com/{org}/{project}）
+    prompt: "组织名称（GitHub 组织或用户名，用于 Go 模块路径）| GitHub org or user name, used in the Go module path"
     type: string
     default: kamalyes
     required: true
 
   - name: ObjectPrefix
-    prompt: 组织前缀（如 kronos，用于项目名 {prefix}-{type}-service）
+    prompt: "组织前缀（用于项目名 {prefix}-{type}-service 与协议中心仓库名）| Project prefix for {prefix}-{type}-service and the contract-hub repository"
     type: string
     default: kronos
     required: true
 
   - name: ServiceType
-    prompt: 服务类型标识（如 open/payment/core，用于项目名 {prefix}-{type}-service）
+    prompt: "服务类型标识（如 open / payment / core）| Service type identifier"
     type: string
     default: my
     required: true
 
   - name: ServiceName
-    prompt: 服务名称（PascalCase，如 PaymentService）
+    prompt: "gRPC 服务名（PascalCase，与 proto 里的 service 同名）| gRPC service name, matching the service in the proto"
     type: string
-    default: "[[ .ServiceType | pascal ]]Service"
+    default: "<% .ServiceType | pascal %>Service"
     required: true
 
   - name: ModuleName
-    prompt: 模块名称（小写，如 payment-service）
+    prompt: "模块名（小写短横线，用于目录名与镜像名）| Module name, lower kebab, used for directory and image names"
     type: string
-    default: "[[ .ServiceType ]]-service"
+    default: "<% .ServiceType %>-service"
     required: true
 
   - name: ProjectName
-    prompt: 项目名称（如 kronos-payment-service）
+    prompt: "项目名称（仓库名 / 目录名）| Repository and directory name"
     type: string
-    default: "[[ .ObjectPrefix ]]-[[ .ServiceType ]]-service"
+    default: "<% .ObjectPrefix %>-<% .ServiceType %>-service"
     required: true
 
   - name: AuthorName
-    prompt: 作者名称
+    prompt: "作者名称 | Author name"
     type: string
     default: kamalyes
     required: true
 
   - name: AuthorEmail
-    prompt: 作者邮箱
+    prompt: "作者邮箱 | Author email"
     type: string
     default: example@qq.com
     required: true
 
   - name: GoVersion
-    prompt: Go 版本
+    prompt: "Go 版本 | Go version"
     type: select
     choices: ["1.22", "1.23", "1.24", "1.25"]
     default: "1.25"
 
-  - name: GatewayPrefix
-    prompt: 网关配置前缀（如 gateway-payment）
+  - name: BaseBranch
+    prompt: "主干分支（CI 触发基线）| Trunk branch for CI triggers"
+    type: select
+    choices: ["master", "main"]
+    default: "master"
+
+  # --------------------------------------------------------------------------
+  # AI 协作工具 | AI coding assistant
+  #
+  # 开发指南 skill 在模板里只有一份正文（__ai_home__/），渲染时按这里的选择落到
+  # 对应工具的目录各家读取位置不同：Trae 读 .trae/，Claude Code 读 .claude/，
+  # Cursor 读 .cursor/，VS Code 系扩展读 .vscode/
+  # 取值与默认值和 kronos-share-proto-template / openapi-ts-sdk-template 保持一致
+  #
+  # [EN] The development skill exists once under __ai_home__/ and lands in the directory
+  # the chosen assistant reads. Same choices and default as the sibling templates.
+  # --------------------------------------------------------------------------
+  - name: AiAssistant
+    prompt: "AI 协作工具目录（开发指南 skill 落到哪）| Directory of the AI coding assistant that reads the skill"
+    type: select
+    choices: [".trae", ".claude", ".cursor", ".vscode"]
+    default: ".trae"
+
+  # --------------------------------------------------------------------------
+  # 协议中心 | Contract hub
+  #
+  # 服务的 proto 契约不在本仓库，而来自协议中心（kronos-share-proto-template
+  # 生成的仓库）只有 models/base.go 依赖它的 pb/common（Paging / LocalizedText）
+  #
+  # [EN] The proto contract lives in a contract hub generated from
+  # kronos-share-proto-template, not here. Only models/base.go depends on its pb/common.
+  # --------------------------------------------------------------------------
+  - name: ShareProtoModule
+    prompt: "协议中心 Go 模块路径 | Go module path of the contract hub"
     type: string
-    default: "gateway-[[ .ServiceType ]]"
+    default: "github.com/<% .OrgName %>/<% .ObjectPrefix %>-share-proto"
     required: true
 
+  - name: ShareProtoVersion
+    prompt: "协议中心依赖版本（latest 则由 init 脚本解析最新 commit）| Contract-hub version, or latest to resolve the newest commit"
+    type: string
+    default: "latest"
+    required: true
+
+  # --------------------------------------------------------------------------
+  # 运行参数 | Runtime
+  # --------------------------------------------------------------------------
   - name: GRPCPort
-    prompt: gRPC 端口
+    prompt: "gRPC 端口 | gRPC port"
     type: int
     default: "9190"
 
   - name: HTTPPort
-    prompt: HTTP 端口
+    prompt: "HTTP 端口 | HTTP port"
     type: int
     default: "8190"
 
   - name: HealthPort
-    prompt: 健康检查端口
+    prompt: "健康检查端口 | Health check port"
     type: int
     default: "8191"
 
-  - name: DBName
-    prompt: 数据库名称
+  - name: GatewayPrefix
+    prompt: "网关配置前缀（决定 resources/<prefix>-<env>.yaml 的文件名）| Gateway config prefix, names resources/<prefix>-<env>.yaml"
     type: string
-    default: "[[ .ServiceType | snake ]]_service"
+    default: "gateway-<% .ServiceType %>"
+    required: true
+
+  - name: DBName
+    prompt: "数据库名称 | Database name"
+    type: string
+    default: "<% .ServiceType | snake %>_service"
     required: true
 
   - name: CachePrefix
-    prompt: 缓存键前缀
+    prompt: "缓存键前缀 | Cache key prefix"
     type: string
-    default: "[[ .ServiceType | snake ]]:"
+    default: "<% .ServiceType | snake %>:"
     required: true
 
   - name: MetricsNamespace
-    prompt: 监控指标命名空间
+    prompt: "监控指标命名空间 | Metrics namespace"
     type: string
-    default: "[[ .ServiceType | snake ]]"
+    default: "<% .ServiceType | snake %>"
     required: true
 
-  - name: UseRedis
-    prompt: 是否使用 Redis
-    type: bool
-    default: "true"
+  - name: DefaultLocale
+    prompt: "校验与业务错误的默认语言 | Default locale for validation and business errors"
+    type: select
+    choices: ["zh", "en", "zh-TW", "ja", "ko", "fr", "de", "es", "ru"]
+    default: "zh"
 
-  - name: UseAuthInterceptor
-    prompt: 是否启用认证拦截器
+  # --------------------------------------------------------------------------
+  # 功能开关 | Feature toggles
+  #
+  # 这些开关既在文件内容里用 <% if eq .X "true" %> 控制代码分支，也在下面的
+  # ignore 规则里控制整个文件是否生成两处都要改，只改一处会留下孤立文件或断引用
+  #
+  # [EN] Each toggle controls code branches inside files AND whether whole files are
+  # emitted (see the ignore rules). Both places must agree, or you get orphan files
+  # or dangling references.
+  # --------------------------------------------------------------------------
+  - name: UseRedis
+    prompt: "是否使用 Redis | Use Redis"
     type: bool
     default: "true"
 
   - name: UseSubscriber
-    prompt: 是否启用事件订阅
+    prompt: "是否启用事件订阅 | Enable the event subscriber"
     type: bool
     default: "false"
 
   - name: GenerateExample
-    prompt: 是否生成示例 Model/Repository/Service 文件
+    prompt: "是否生成示例 Model / Repository / Service（否则只生成工程骨架）| Generate the example model, repository and service, or scaffolding only"
     type: bool
     default: "true"
 
   - name: ExampleName
-    prompt: 示例实体名称（PascalCase，如 Tenant）
+    prompt: "示例实体名称（PascalCase）| Example entity name (PascalCase)"
     type: string
     default: Demo
     required: true
 
-  - name: ShareProtoModule
-    prompt: 共享Proto模块路径
+  - name: PipelineRepo
+    prompt: "复用型工作流仓库（CI 复用它；不用 CI 可删 .github/workflows）| Reusable-workflow repository used by CI"
     type: string
-    default: "github.com/[[ .OrgName ]]/[[ .ObjectPrefix ]]-share-proto"
+    default: kamalyes/deploy-pipeline
     required: true
 
+# ============================================================================
+# 忽略规则 | Ignore rules
+#
+# ignore 判定的是「应用 rename 并渲染之后」的路径，模式本身也会被渲染，
+# 所以可以按变量条件性地排除文件——这正是功能开关为「否」时不留孤立文件的做法
+#
+# 注意不要写 "*.md"：它按后缀匹配所有层级的 markdown，会把生成项目的全部文档
+# 连同 AI 规范一起删掉（本模板 2.0.0 之前就是这个毛病，生成出来一个 md 都没有）
+#
+# [EN] ignore matches the path after rename AND rendering, and the patterns are rendered
+# too, so files can be excluded per variable — that is how a disabled toggle avoids
+# leaving orphan files. Never use "*.md": it suffix-matches markdown at every level and
+# wipes the generated project's entire documentation, including the AI skill (which is
+# exactly what this template did before 2.0.0).
+# ============================================================================
 ignore:
   - "kopy.yaml"
+  # 模板自身的说明文档：rename 后在此被忽略
+  # [EN] The template's own documentation, renamed then ignored
+  - "__kopy_template_doc__"
+  - ".git/"
   - ".git/**"
-  - "*.md"
+  - ".DS_Store"
+  # 示例实体：关掉就整组不生成，避免留下没人引用的孤立文件
+  # [EN] Example entity: excluded as a group so nothing is left unreferenced
+  - '<% if ne .GenerateExample "true" %>models/<% .ExampleName | snake %>_model.go<% end %>'
+  - '<% if ne .GenerateExample "true" %>repository/<% .ExampleName | snake %>_repository.go<% end %>'
+  - '<% if ne .GenerateExample "true" %>service/<% .ExampleName | snake %>_service.go<% end %>'
+  # 事件订阅：默认关，关掉则不生成
+  # [EN] Event subscriber: off by default and not emitted when disabled
+  - '<% if ne .UseSubscriber "true" %>bootstrap/subscriber.go<% end %>'
 
+# ============================================================================
+# 重命名规则 | Rename rules
+#
+# 顺序敏感：规则按顺序对同一个路径字符串做 ReplaceAll
+#   1. 先把模板自述改名成忽略标记，使它不进入生成项目
+#   2-3. 两份文档模板落位成生成项目的 README.md / README.en.md
+#   4+. 占位目录名替换成模板变量
+# 注意 "readme-en.tpl" 不含子串 "readme.tpl"，两条规则互不干扰
+#
+# [EN] Order matters: rules run as sequential ReplaceAll calls on the same path.
+# Note that "readme-en.tpl" does not contain the substring "readme.tpl".
+# ============================================================================
 rename:
+  # 工作流在模板仓库里带 .tpl 后缀，渲染时去掉
+  # 原因：GitHub Actions 会解析模板仓库自己的 .github/workflows/*.yml，而里面的
+  # 占位符还没渲染（branches: - <% .BaseBranch %> 会被 YAML 读成嵌套序列），
+  # 模板仓库会一直挂着无效工作流的红叉
+  #
+  # [EN] Workflow files carry a .tpl suffix in the template repository and lose it on
+  # render, because GitHub Actions parses the template repo's own workflows, where the
+  # placeholders are still unrendered and fail to parse.
+  - pattern: ".yml.tpl"
+    value: ".yml"
+  - pattern: "README.md"
+    value: "__kopy_template_doc__"
+  - pattern: "readme-en.tpl"
+    value: "README.en.md"
+  - pattern: "readme.tpl"
+    value: "README.md"
+  - pattern: "__ai_home__"
+    value: "<% .AiAssistant %>"
   - pattern: "__project_name__"
-    value: "[[ .ProjectName ]]"
+    value: "<% .ProjectName %>"
   - pattern: "__service_name__"
-    value: "[[ .ServiceName | snake ]]"
+    value: "<% .ServiceName | snake %>"
   - pattern: "__module_name__"
-    value: "[[ .ModuleName ]]"
+    value: "<% .ModuleName %>"
   - pattern: "__example_name__"
-    value: "[[ .ExampleName | snake ]]"
+    value: "<% .ExampleName | snake %>"
   - pattern: "__gateway_prefix__"
-    value: "[[ .GatewayPrefix ]]"
+    value: "<% .GatewayPrefix %>"
 
+# ============================================================================
+# 生命周期钩子 | Lifecycle hooks
+#
+# 一条命令打通：解析协议中心依赖 → go mod tidy → build → test
+# 顺序由脚本保证，详见 scripts/init.sh 的注释
+# kopy 默认会先列出命令再询问（--hooks always 可免询问，CI 用）
+#
+# [EN] A single command resolves the contract-hub dependency, tidies, builds and tests.
+# kopy lists the commands and asks before running them; --hooks always skips the prompt.
+# ============================================================================
 hooks:
   after:
-    - go mod tidy
+    - bash scripts/init.sh

@@ -1,43 +1,43 @@
 /*
- * @Author: [[ .AuthorName ]] [[ .AuthorEmail ]]
- * @Date: [[ nowFmt "2006-01-02" ]] 00:00:00
+ * @Author: <% .AuthorName %> <% .AuthorEmail %>
+ * @Date: <% nowFmt "2006-01-02" %> 00:00:00
  * @LastEditors: kamalyes 501893067@qq.com
- * @LastEditTime: [[ nowFmt "2006-01-02" ]] 00:00:00
- * @FilePath: \[[ .ProjectName ]]\bootstrap\server.go
+ * @LastEditTime: <% nowFmt "2006-01-02" %> 00:00:00
+ * @FilePath: \<% .ProjectName %>\bootstrap\server.go
  * @Description: 服务启动引导，初始化并启动gRPC和HTTP网关服务
  *
- * Copyright (c) [[ .Year ]] by [[ .AuthorName ]], All Rights Reserved.
+ * Copyright (c) <% .Year %> by <% .AuthorName %>, All Rights Reserved.
  */
 package bootstrap
 
 import (
 	"fmt"
 	gruntime "github.com/grpc-ecosystem/grpc-gateway/v2/runtime"
-	"github.com/[[ .OrgName ]]/[[ .ProjectName ]]/repository"
-	"github.com/[[ .OrgName ]]/[[ .ProjectName ]]/service"
+	"github.com/<% .OrgName %>/<% .ProjectName %>/repository"
+	"github.com/<% .OrgName %>/<% .ProjectName %>/service"
 	goconfig "github.com/kamalyes/go-config"
 	gateway "github.com/kamalyes/go-rpc-gateway"
 	gwglobal "github.com/kamalyes/go-rpc-gateway/global"
 )
 
-// [[ .ServiceName ]]Gateway 服务启动器
-type [[ .ServiceName ]]Gateway struct {
+// <% .ServiceName %>Gateway 服务启动器
+type <% .ServiceName %>Gateway struct {
 	gateway *gateway.Gateway
 	repo    *repository.RepositoryFactory
-	svc     *service.[[ .ServiceName ]]ServiceImpl
+	svc     *service.<% .ServiceName %>ServiceImpl
 }
 
-// New[[ .ServiceName ]]Gateway 创建服务启动器实例
-func New[[ .ServiceName ]]Gateway() *[[ .ServiceName ]]Gateway {
-	return &[[ .ServiceName ]]Gateway{}
+// New<% .ServiceName %>Gateway 创建服务启动器实例
+func New<% .ServiceName %>Gateway() *<% .ServiceName %>Gateway {
+	return &<% .ServiceName %>Gateway{}
 }
 
 // Run 启动服务
-func (s *[[ .ServiceName ]]Gateway) Run() error {
+func (s *<% .ServiceName %>Gateway) Run() error {
 	gw, err := gateway.NewGateway().
 		WithSearchPath("resources").
 		WithEnvironment(goconfig.GetEnvironment()).
-		WithPrefix("[[ .GatewayPrefix ]]").
+		WithPrefix("<% .GatewayPrefix %>").
 		WithHotReload(nil).
 		Build()
 	if err != nil {
@@ -66,17 +66,17 @@ func (s *[[ .ServiceName ]]Gateway) Run() error {
 
 	gwglobal.LOGGER.Info("Registering HTTP handlers...")
 	s.registerHTTPHandlers()
-[[- if eq .UseSubscriber "true" ]]
+<%- if eq .UseSubscriber "true" %>
 
 	gwglobal.LOGGER.Info("Starting subscribers...")
 	s.startSubscribers()
-[[- end ]]
+<%- end %>
 
-	gwglobal.LOGGER.Info("[[ .ServiceName ]] Server is ready")
+	gwglobal.LOGGER.Info("<% .ServiceName %> Server is ready")
 	return s.gateway.Run()
 }
 
 // getMiddleware 获取中间件列表
-func (s *[[ .ServiceName ]]Gateway) getMiddleware() []gruntime.Middleware {
+func (s *<% .ServiceName %>Gateway) getMiddleware() []gruntime.Middleware {
 	return nil
 }

@@ -2,18 +2,5 @@
   "welcome": "환영합니다",
   "success": "성공",
   "hello": "안녕하세요",
-  "goodbye": "안녕히 가세요",
-  "error.internal": "내부 서버 오류",
-  "error.invalid_argument": "잘못된 인수",
-  "error.unauthenticated": "인증되지 않음",
-  "error.permission_denied": "권한 거부됨",
-  "error.not_found": "리소스를 찾을 수 없음",
-  "error.conflict": "리소스 충돌",
-  "error.validation_failed": "유효성 검사 실패",
-  "error.invalid_parameter": "잘못된 매개변수",
-  "error.cannot_be_self": "자기 자신에 대해 작업할 수 없음",
-  "error.database_operation_failed": "데이터베이스 작업 실패",
-  "error.database_error": "데이터베이스 오류",
-  "error.conversion_failed": "변환 실패",
-  "error.repository_not_initialized": "저장소가 초기화되지 않음"
+  "goodbye": "안녕히 가세요"
 }

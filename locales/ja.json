@@ -2,18 +2,5 @@
   "welcome": "ようこそ",
   "success": "成功",
   "hello": "こんにちは",
-  "goodbye": "さようなら",
-  "error.internal": "内部サーバーエラー",
-  "error.invalid_argument": "無効な引数",
-  "error.unauthenticated": "認証されていません",
-  "error.permission_denied": "権限が拒否されました",
-  "error.not_found": "リソースが見つかりません",
-  "error.conflict": "リソースの競合",
-  "error.validation_failed": "検証に失敗しました",
-  "error.invalid_parameter": "無効なパラメータ",
-  "error.cannot_be_self": "自分自身を操作することはできません",
-  "error.database_operation_failed": "データベース操作に失敗しました",
-  "error.database_error": "データベースエラー",
-  "error.conversion_failed": "変換に失敗しました",
-  "error.repository_not_initialized": "リポジトリが初期化されていません"
+  "goodbye": "さようなら"
 }

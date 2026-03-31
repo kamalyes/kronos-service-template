@@ -1,12 +1,12 @@
 /*
- * @Author: [[ .AuthorName ]] [[ .AuthorEmail ]]
- * @Date: [[ nowFmt "2006-01-02" ]] 00:00:00
+ * @Author: <% .AuthorName %> <% .AuthorEmail %>
+ * @Date: <% nowFmt "2006-01-02" %> 00:00:00
  * @LastEditors: kamalyes 501893067@qq.com
- * @LastEditTime: [[ nowFmt "2006-01-02" ]] 00:00:00
- * @FilePath: \[[ .ProjectName ]]\models\base.go
+ * @LastEditTime: <% nowFmt "2006-01-02" %> 00:00:00
+ * @FilePath: \<% .ProjectName %>\models\base.go
  * @Description: 模型基础类型定义，提供通用数据类型和工具方法
  *
- * Copyright (c) [[ .Year ]] by [[ .AuthorName ]], All Rights Reserved.
+ * Copyright (c) <% .Year %> by <% .AuthorName %>, All Rights Reserved.
  */
 
 package models
@@ -14,7 +14,7 @@ package models
 import (
 	"database/sql/driver"
 
-	commonpb "[[ .ShareProtoModule ]]/pb/common"
+	commonpb "<% .ShareProtoModule %>/pb/common"
 	"github.com/kamalyes/go-pbmo"
 	sqlbuilder "github.com/kamalyes/go-sqlbuilder"
 )

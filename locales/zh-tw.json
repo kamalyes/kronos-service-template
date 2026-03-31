@@ -2,18 +2,5 @@
   "welcome": "歡迎",
   "success": "成功",
   "hello": "你好",
-  "goodbye": "再見",
-  "error.internal": "伺服器內部錯誤",
-  "error.invalid_argument": "無效的參數",
-  "error.unauthenticated": "未認證（未登入）",
-  "error.permission_denied": "權限不足",
-  "error.not_found": "資源未找到",
-  "error.conflict": "資源衝突",
-  "error.validation_failed": "資料驗證失敗",
-  "error.invalid_parameter": "無效的請求參數",
-  "error.cannot_be_self": "操作對象不能是自身",
-  "error.database_operation_failed": "資料庫操作失敗",
-  "error.database_error": "資料庫錯誤",
-  "error.conversion_failed": "轉換失敗",
-  "error.repository_not_initialized": "儲存庫未初始化"
+  "goodbye": "再見"
 }

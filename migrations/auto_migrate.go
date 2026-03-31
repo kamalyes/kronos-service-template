@@ -1,18 +1,18 @@
 /*
- * @Author: [[ .AuthorName ]] [[ .AuthorEmail ]]
- * @Date: [[ nowFmt "2006-01-02" ]] 00:00:00
- * @LastEditors: [[ .AuthorName ]] [[ .AuthorEmail ]]
- * @LastEditTime: [[ nowFmt "2006-01-02" ]] 00:00:00
- * @FilePath: \[[ .ProjectName ]]\migrations\auto_migrate.go
+ * @Author: <% .AuthorName %> <% .AuthorEmail %>
+ * @Date: <% nowFmt "2006-01-02" %> 00:00:00
+ * @LastEditors: <% .AuthorName %> <% .AuthorEmail %>
+ * @LastEditTime: <% nowFmt "2006-01-02" %> 00:00:00
+ * @FilePath: \<% .ProjectName %>\migrations\auto_migrate.go
  * @Description: 数据库自动迁移 基于 go-sqlbuilder Migrator
  *
- * Copyright (c) [[ .Year ]] by [[ .AuthorName ]], All Rights Reserved.
+ * Copyright (c) <% .Year %> by <% .AuthorName %>, All Rights Reserved.
  */
 
 package migrations
 
 import (
-	"github.com/[[ .OrgName ]]/[[ .ProjectName ]]/models"
+	"github.com/<% .OrgName %>/<% .ProjectName %>/models"
 	"github.com/kamalyes/go-sqlbuilder/db"
 	"gorm.io/gorm"
 )
@@ -20,43 +20,45 @@ import (
 // GetAllModels 获取所有需要初始化的数据库模型
 func GetAllModels() []interface{} {
 	return []interface{}{
-[[- if eq .GenerateExample "true" ]]
-		&models.[[ .ExampleName ]]Model{},
-[[- else ]]
+<%- if eq .GenerateExample "true" %>
+		&models.<% .ExampleName %>Model{},
+<%- else %>
 		// TODO: 添加模型
-[[- end ]]
+<%- end %>
 	}
 }
 
 // GetAllIndexes 获取所有需要创建的复合索引
 func GetAllIndexes() []db.IndexDefinition {
 	return []db.IndexDefinition{
-[[- if eq .GenerateExample "true" ]]
+<%- if eq .GenerateExample "true" %>
 		{
-			Table: models.TableName[[ .ExampleName ]],
-			Name:  "idx_[[ .ExampleName | snake ]]s_name",
-			Columns: []string{
-				"name",
-			},
-			Unique: true,
+			Table: models.TableName<% .ExampleName %>,
+			Name:  "idx_<% .ExampleName | snake %>s_name",
+			// Columns 在 go-sqlbuilder v0.7 起是「列定义字符串」而非 []string：
+			// 这样才能表达 "name DESC"、"(tenant_id, name)" 这类形式。
+			// [EN] Since go-sqlbuilder v0.7 Columns is a column DEFINITION string rather than
+			// a []string, so forms like "name DESC" or "(tenant_id, name)" can be expressed.
+			Columns: "name",
+			Unique:  true,
 		},
-[[- else ]]
+<%- else %>
 		// TODO: 添加索引
-[[- end ]]
+<%- end %>
 	}
 }
 
 // GetAllComments 获取所有表注释
 func GetAllComments() []db.TableComment {
 	return []db.TableComment{
-[[- if eq .GenerateExample "true" ]]
+<%- if eq .GenerateExample "true" %>
 		{
-			Table:   models.TableName[[ .ExampleName ]],
-			Comment: models.[[ .ExampleName ]]Model{}.TableComment(),
+			Table:   models.TableName<% .ExampleName %>,
+			Comment: models.<% .ExampleName %>Model{}.TableComment(),
 		},
-[[- else ]]
+<%- else %>
 		// TODO: 添加表注释
-[[- end ]]
+<%- end %>
 	}
 }
 
