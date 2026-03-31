@@ -25,6 +25,11 @@ type <% .ServiceName %>Gateway struct {
 	gateway *gateway.Gateway
 	repo    *repository.RepositoryFactory
 	svc     *service.<% .ServiceName %>ServiceImpl
+<%- if eq .GenerateExample "true" %>
+	// exampleSvc 实现协议中心的 <% .ExampleService %>ServiceServer
+	exampleSvc *service.<% .ExampleService %>Service
+	secondSvc  *service.<% .SecondService %>Service
+<%- end %>
 }
 
 // New<% .ServiceName %>Gateway 创建服务启动器实例

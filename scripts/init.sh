@@ -64,6 +64,13 @@ elif [[ "$SKIP_PROTO" == 1 ]]; then
     log_warn "[1/4] 按 --skip-proto 跳过协议中心依赖解析"
 else
     log_info "[1/4] 解析协议中心依赖 ${PROTO_MODULE}@${PROTO_VERSION}"
+    # 先摘掉已有的 require 再 go get：go get 会先解析 go.mod 里现存的版本约束，
+    # 若那里是个占位或写坏的版本，会直接报 invalid version 而拿不到 latest
+    # 模块本就不在 require 时 droprequire 是无副作用的空操作
+    #
+    # [EN] Drop any existing requirement first: go get resolves the version already in
+    # go.mod, so a placeholder or broken one makes it fail instead of fetching latest
+    go mod edit -droprequire="${PROTO_MODULE}" 2>/dev/null || true
     if ! go get "${PROTO_MODULE}@${PROTO_VERSION}"; then
         echo ""
         log_error "解析 ${PROTO_MODULE}@${PROTO_VERSION} 失败"

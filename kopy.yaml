@@ -151,7 +151,18 @@ questions:
   - name: ShareProtoModule
     prompt: "协议中心 Go 模块路径 | Go module path of the contract hub"
     type: string
-    default: "github.com/<% .OrgName %>/<% .ObjectPrefix %>-share-proto"
+    # 默认指向样板协议中心，让生成出来的服务开箱即能编译、能跑。
+    # 它由 kronos-share-proto-template 生成，带 catalog/Product、inventory/Warehouse、
+    # tenant/Tenant 三个示例模块，示例实现对接的就是其中的 catalog/Product。
+    # 接真实项目时改成自己的协议中心（按 kronos-share-proto-template 生成一份）。
+    # 同 openapi-ts-sdk-template 把 SwaggerUrl 默认指向公开 Petstore 的道理：
+    # 先让链路跑通，再换成自己的。
+    #
+    # [EN] Defaults to the sample contract hub so a freshly generated service compiles and
+    # runs out of the box. Point it at your own hub (generated from
+    # kronos-share-proto-template) for real projects — same rationale as
+    # openapi-ts-sdk-template defaulting SwaggerUrl to the public Petstore spec.
+    default: "github.com/kamalyes/kronos-service-template-proto"
     required: true
 
   - name: ShareProtoVersion
@@ -233,10 +244,67 @@ questions:
     type: bool
     default: "true"
 
-  - name: ExampleName
-    prompt: "示例实体名称（PascalCase）| Example entity name (PascalCase)"
+  # --------------------------------------------------------------------------
+  # 示例实现对接的协议中心模块 | Which contract-hub module the example implements
+  #
+  # 示例不是凭空造的实体，而是真的实现协议中心里那个 service：
+  # 导入 <ShareProtoModule>/pb/<ExampleModule>，实现 <ExampleService>ServiceServer
+  # 的全部 RPC，并在 bootstrap 里真实注册。所以这两个值必须与协议中心生成时填的
+  # ExampleModule / ExampleService 一致，否则 import 路径与类型名对不上、编译直接失败。
+  #
+  # 协议中心（kronos-share-proto-template）默认生成三个模块：
+  #   catalog/Product     单 service 完整 CRUD —— 本模板示例对接的就是它
+  #   inventory/Warehouse 第二个单 service 示例
+  #   tenant/Tenant       混合模块，一个模块多个 service
+  #
+  # [EN] The example is not an invented entity: it implements the hub's service, importing
+  # <ShareProtoModule>/pb/<ExampleModule> and implementing every RPC of
+  # <ExampleService>ServiceServer. Both values must match what the hub was generated with.
+  # --------------------------------------------------------------------------
+  - name: ExampleModule
+    prompt: "示例对接的协议中心模块目录名（须与协议中心一致）| Contract-hub module the example implements"
     type: string
-    default: Demo
+    default: catalog
+    required: true
+
+  - name: ExampleService
+    prompt: "示例对接的 service 名（PascalCase，须与协议中心一致）| Service name the example implements"
+    type: string
+    default: Product
+    required: true
+
+  # 协议中心默认生成三个模块，模板把它们全部实现，用来覆盖三种形态：
+  #   单 service 完整 CRUD（catalog/Product）
+  #   第二个单 service，字段更简单、更新请求用 wrapper 可选字段（inventory/Warehouse）
+  #   混合模块：一个模块里两个 service 共用 proto 包与 Go 包（tenant/Tenant + TenantMember）
+  # 真实服务通常只实现自己那一个模块，把不需要的那几组删掉即可。
+  #
+  # [EN] The hub generates three modules and the template implements all of them to cover the
+  # three shapes: a full CRUD service, a second simpler one whose update request uses wrapper
+  # types, and a mixed module where two services share the proto and Go package. A real service
+  # usually implements only its own module; delete the groups it does not need.
+  - name: SecondModule
+    prompt: "第二个模块目录名（须与协议中心一致）| Second module directory, must match the hub"
+    type: string
+    default: inventory
+    required: true
+
+  - name: SecondService
+    prompt: "第二个 service 名（PascalCase）| Second service name"
+    type: string
+    default: Warehouse
+    required: true
+
+  - name: MixedModule
+    prompt: "混合模块目录名（一个模块多个 service）| Mixed module directory, several services in one"
+    type: string
+    default: tenant
+    required: true
+
+  - name: MixedService
+    prompt: "混合模块的聚合根 service 名（成员服务自动叫 XxxMember）| Aggregate-root service; the member service is named XxxMember"
+    type: string
+    default: Tenant
     required: true
 
   - name: PipelineRepo
@@ -270,9 +338,18 @@ ignore:
   - ".DS_Store"
   # 示例实体：关掉就整组不生成，避免留下没人引用的孤立文件
   # [EN] Example entity: excluded as a group so nothing is left unreferenced
-  - '<% if ne .GenerateExample "true" %>models/<% .ExampleName | snake %>_model.go<% end %>'
-  - '<% if ne .GenerateExample "true" %>repository/<% .ExampleName | snake %>_repository.go<% end %>'
-  - '<% if ne .GenerateExample "true" %>service/<% .ExampleName | snake %>_service.go<% end %>'
+  - '<% if ne .GenerateExample "true" %>models/<% .ExampleService | snake %>_model.go<% end %>'
+  - '<% if ne .GenerateExample "true" %>repository/<% .ExampleService | snake %>_repository.go<% end %>'
+  - '<% if ne .GenerateExample "true" %>service/<% .ExampleService | snake %>_service.go<% end %>'
+  - '<% if ne .GenerateExample "true" %>models/<% .SecondService | snake %>_model.go<% end %>'
+  - '<% if ne .GenerateExample "true" %>repository/<% .SecondService | snake %>_repository.go<% end %>'
+  - '<% if ne .GenerateExample "true" %>service/<% .SecondService | snake %>_service.go<% end %>'
+  - '<% if ne .GenerateExample "true" %>models/<% .MixedService | snake %>_model.go<% end %>'
+  - '<% if ne .GenerateExample "true" %>models/<% .MixedService | snake %>_member_model.go<% end %>'
+  - '<% if ne .GenerateExample "true" %>repository/<% .MixedService | snake %>_repository.go<% end %>'
+  - '<% if ne .GenerateExample "true" %>repository/<% .MixedService | snake %>_member_repository.go<% end %>'
+  - '<% if ne .GenerateExample "true" %>service/<% .MixedService | snake %>_service.go<% end %>'
+  - '<% if ne .GenerateExample "true" %>service/<% .MixedService | snake %>_member_service.go<% end %>'
   # 事件订阅：默认关，关掉则不生成
   # [EN] Event subscriber: off by default and not emitted when disabled
   - '<% if ne .UseSubscriber "true" %>bootstrap/subscriber.go<% end %>'
@@ -314,8 +391,14 @@ rename:
     value: "<% .ServiceName | snake %>"
   - pattern: "__module_name__"
     value: "<% .ModuleName %>"
-  - pattern: "__example_name__"
-    value: "<% .ExampleName | snake %>"
+  - pattern: "__example_service__"
+    value: "<% .ExampleService | snake %>"
+  - pattern: "__second_service__"
+    value: "<% .SecondService | snake %>"
+  - pattern: "__mixed_member__"
+    value: "<% .MixedService | snake %>_member"
+  - pattern: "__mixed_service__"
+    value: "<% .MixedService | snake %>"
   - pattern: "__gateway_prefix__"
     value: "<% .GatewayPrefix %>"
 

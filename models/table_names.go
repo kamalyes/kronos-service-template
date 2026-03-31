@@ -14,7 +14,8 @@ package models
 // 数据库表名常量 - 通过调用模型的 TableName() 方法动态获取
 var (
 <%- if eq .GenerateExample "true" %>
-	TableName<% .ExampleName %> = <% .ExampleName %>Model{}.TableName()
+	TableName<% .ExampleService %> = <% .ExampleService %>Model{}.TableName()
+	TableName<% .SecondService %>  = <% .SecondService %>Model{}.TableName()
 <%- else %>
 	// TODO: 添加表名常量
 	// TableNameExample = ExampleModel{}.TableName()

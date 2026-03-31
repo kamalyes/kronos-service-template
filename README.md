@@ -193,7 +193,7 @@ go run main.go
 | `__project_name__` | `<% .ProjectName %>` | 项目名称 |
 | `__service_name__` | `<% .ServiceName \| snake %>` | 服务名称（蛇形） |
 | `__module_name__` | `<% .ModuleName %>` | 模块名称 |
-| `__example_name__` | `<% .ExampleName \| snake %>` | 示例实体名称（蛇形） |
+| `__example_name__` | `<% .ExampleService \| snake %>` | 示例实体名称（蛇形） |
 | `__gateway_prefix__` | `<% .GatewayPrefix %>` | 网关配置前缀 |
 | `__ai_home__` | `<% .AiAssistant %>` | AI 规范目录（.trae / .claude / .cursor / .vscode）|
 

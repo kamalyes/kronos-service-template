@@ -20,7 +20,8 @@ import (
 // RepositoryFactory 仓库工厂结构体
 type RepositoryFactory struct {
 <%- if eq .GenerateExample "true" %>
-	<% .ExampleName %> *<% .ExampleName %>Repository
+	<% .ExampleService %> *<% .ExampleService %>Repository
+	<% .SecondService %>  *<% .SecondService %>Repository
 <%- else %>
 	// TODO: 添加仓库字段
 <%- end %>
@@ -36,7 +37,8 @@ func NewRepositoryFactory() *RepositoryFactory {
 	factoryOnce.Do(func() {
 		factoryInstance = &RepositoryFactory{
 <%- if eq .GenerateExample "true" %>
-			<% .ExampleName %>: New<% .ExampleName %>Repository(),
+			<% .ExampleService %>: New<% .ExampleService %>Repository(),
+			<% .SecondService %>:  New<% .SecondService %>Repository(),
 <%- else %>
 			// TODO: 初始化仓库
 <%- end %>

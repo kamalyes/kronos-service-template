@@ -17,14 +17,28 @@ import (
 	"github.com/<% .OrgName %>/<% .ProjectName %>/service"
 	gwglobal "github.com/kamalyes/go-rpc-gateway/global"
 	"google.golang.org/grpc"
+<%- if eq .GenerateExample "true" %>
+	pb "<% .ShareProtoModule %>/pb/<% .ExampleModule %>"
+	secondpb "<% .ShareProtoModule %>/pb/<% .SecondModule %>"
+<%- end %>
 )
 
 // initServices 初始化所有服务
 func (s *<% .ServiceName %>Gateway) initServices() {
 	gwglobal.LOGGER.Info("Initializing services...")
 
+	// 转换器先注册：registerConverters 会按反射构建字段计划并缓存，
+	// 放到开始服务之后注册，第一个请求就要替所有人付这笔反射开销
+	// [EN] Register converters first; doing it after serving starts makes the first request
+	// pay the reflection cost for everyone
+	registerConverters()
+
 	s.repo = repository.NewRepositoryFactory()
 	s.svc = service.New<% .ServiceName %>Service(s.repo)
+<%- if eq .GenerateExample "true" %>
+	s.exampleSvc = service.New<% .ExampleService %>Service(s.repo.<% .ExampleService %>)
+	s.secondSvc = service.New<% .SecondService %>Service(s.repo.<% .SecondService %>)
+<%- end %>
 
 	gwglobal.LOGGER.Info("Services initialized")
 }
@@ -32,23 +46,42 @@ func (s *<% .ServiceName %>Gateway) initServices() {
 // registerGRPCServices 注册gRPC服务
 func (s *<% .ServiceName %>Gateway) registerGRPCServices() {
 	s.gateway.RegisterService(func(srv *grpc.Server) {
+<%- if eq .GenerateExample "true" %>
+		pb.Register<% .ExampleService %>ServiceServer(srv, s.exampleSvc)
+		secondpb.Register<% .SecondService %>ServiceServer(srv, s.secondSvc)
+<%- else %>
 		// TODO: 注册 gRPC 服务
-		// pb.Register<% .ServiceName %>ServiceServer(srv, s.svc)
+		// pb.RegisterXxxServiceServer(srv, s.xxxSvc)
+<%- end %>
 	})
-	gwglobal.LOGGER.Info("<% .ServiceName %>Service gRPC registered")
+	gwglobal.LOGGER.Info("gRPC services registered")
 }
 
 // registerHTTPHandlers 注册HTTP处理器
 func (s *<% .ServiceName %>Gateway) registerHTTPHandlers() {
+<%- if eq .GenerateExample "true" %>
+	// 用 HandlerServer 而不是 HandlerFromEndpoint：前者把 HTTP 请求直接交给同进程的
+	// 实现，不绕回 gRPC 端口，省掉一次本机网络往返与一次序列化
+	// [EN] HandlerServer dispatches HTTP straight to the in-process implementation instead of
+	// dialing back into the gRPC port, saving a loopback round trip and one serialization
+	if err := s.gateway.RegisterGatewayHandler(func(ctx context.Context, mux *runtime.ServeMux) error {
+		if err := pb.Register<% .ExampleService %>ServiceHandlerServer(ctx, mux, s.exampleSvc); err != nil {
+			return err
+		}
+		return secondpb.Register<% .SecondService %>ServiceHandlerServer(ctx, mux, s.secondSvc)
+	}); err != nil {
+		gwglobal.LOGGER.Fatal("注册 HTTP handler 失败 | failed to register HTTP handler: %v", err)
+	}
+<%- else %>
 	// TODO: 注册 HTTP 处理器
 	// if err := s.gateway.RegisterGatewayHandler(func(ctx context.Context, mux *runtime.ServeMux) error {
-	// 	return pb.Register<% .ServiceName %>ServiceHandlerServer(ctx, mux, s.svc)
+	// 	return pb.RegisterXxxServiceHandlerServer(ctx, mux, s.xxxSvc)
 	// }); err != nil {
-	// 	gwglobal.LOGGER.Fatal("Failed to register <% .ServiceName %>Service HTTP handler: %v", err)
+	// 	gwglobal.LOGGER.Fatal("failed to register HTTP handler: %v", err)
 	// }
-
 	_ = context.Background()
 	_ = &runtime.ServeMux{}
+<%- end %>
 
-	gwglobal.LOGGER.Info("<% .ServiceName %>Service HTTP handler registered")
+	gwglobal.LOGGER.Info("HTTP handlers registered")
 }

@@ -21,7 +21,8 @@ import (
 func GetAllModels() []interface{} {
 	return []interface{}{
 <%- if eq .GenerateExample "true" %>
-		&models.<% .ExampleName %>Model{},
+		&models.<% .ExampleService %>Model{},
+		&models.<% .SecondService %>Model{},
 <%- else %>
 		// TODO: 添加模型
 <%- end %>
@@ -33,13 +34,16 @@ func GetAllIndexes() []db.IndexDefinition {
 	return []db.IndexDefinition{
 <%- if eq .GenerateExample "true" %>
 		{
-			Table: models.TableName<% .ExampleName %>,
-			Name:  "idx_<% .ExampleName | snake %>s_name",
+			Table: models.TableName<% .ExampleService %>,
+			Name:  "idx_<% .ExampleService | snake %>s_tenant_code",
 			// Columns 在 go-sqlbuilder v0.7 起是「列定义字符串」而非 []string：
 			// 这样才能表达 "name DESC"、"(tenant_id, name)" 这类形式。
 			// [EN] Since go-sqlbuilder v0.7 Columns is a column DEFINITION string rather than
 			// a []string, so forms like "name DESC" or "(tenant_id, name)" can be expressed.
-			Columns: "name",
+			// 编码在租户内唯一：协议中心的 <% .ExampleService %>CreateRequest 里
+			// code 是必填且带 min/max 约束，业务语义上是租户内的业务主键
+			// [EN] Code is unique per tenant: the hub's create request marks it required
+			Columns: "(tenant_id, code)",
 			Unique:  true,
 		},
 <%- else %>
@@ -53,8 +57,8 @@ func GetAllComments() []db.TableComment {
 	return []db.TableComment{
 <%- if eq .GenerateExample "true" %>
 		{
-			Table:   models.TableName<% .ExampleName %>,
-			Comment: models.<% .ExampleName %>Model{}.TableComment(),
+			Table:   models.TableName<% .ExampleService %>,
+			Comment: models.<% .ExampleService %>Model{}.TableComment(),
 		},
 <%- else %>
 		// TODO: 添加表注释
