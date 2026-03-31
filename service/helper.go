@@ -71,3 +71,15 @@ func dbError(ctx context.Context) error {
 func notFound(ctx context.Context) error {
 	return bizerror.ToGRPCError(ctx, bizerror.BizErrCodeNotFound)
 }
+
+// gwmiddlewareMsg 按请求语言取一条业务文案
+//
+// 动作型接口的 message 字段是给人看的，必须本地化。
+// 文案 key 放在服务自己的 locales/*.json 里；go-bizerror 只内置通用错误码的文案，
+// 业务文案是服务专属的。
+//
+// [EN] The message field of an action endpoint is read by humans and must be localized. Keys
+// live in the service's own locales files; go-bizerror only ships the generic error codes.
+func gwmiddlewareMsg(ctx context.Context, key string) string {
+	return gwmiddleware.GetMsgByKey(ctx, key)
+}

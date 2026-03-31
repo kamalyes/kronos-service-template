@@ -23,6 +23,9 @@ func GetAllModels() []interface{} {
 <%- if eq .GenerateExample "true" %>
 		&models.<% .ExampleService %>Model{},
 		&models.<% .SecondService %>Model{},
+		&models.<% .MixedService %>Model{},
+		&models.<% .MixedService %>RegionAssignmentModel{},
+		&models.<% .MixedService %>MemberModel{},
 <%- else %>
 		// TODO: 添加模型
 <%- end %>

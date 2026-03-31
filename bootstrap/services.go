@@ -20,6 +20,7 @@ import (
 <%- if eq .GenerateExample "true" %>
 	pb "<% .ShareProtoModule %>/pb/<% .ExampleModule %>"
 	secondpb "<% .ShareProtoModule %>/pb/<% .SecondModule %>"
+	mixedpb "<% .ShareProtoModule %>/pb/<% .MixedModule %>"
 <%- end %>
 )
 
@@ -38,6 +39,8 @@ func (s *<% .ServiceName %>Gateway) initServices() {
 <%- if eq .GenerateExample "true" %>
 	s.exampleSvc = service.New<% .ExampleService %>Service(s.repo.<% .ExampleService %>)
 	s.secondSvc = service.New<% .SecondService %>Service(s.repo.<% .SecondService %>)
+	s.mixedSvc = service.New<% .MixedService %>Service(s.repo.<% .MixedService %>)
+	s.mixedMemberSvc = service.New<% .MixedService %>MemberService(s.repo.<% .MixedService %>Member)
 <%- end %>
 
 	gwglobal.LOGGER.Info("Services initialized")
@@ -49,6 +52,8 @@ func (s *<% .ServiceName %>Gateway) registerGRPCServices() {
 <%- if eq .GenerateExample "true" %>
 		pb.Register<% .ExampleService %>ServiceServer(srv, s.exampleSvc)
 		secondpb.Register<% .SecondService %>ServiceServer(srv, s.secondSvc)
+		mixedpb.Register<% .MixedService %>ServiceServer(srv, s.mixedSvc)
+		mixedpb.Register<% .MixedService %>MemberServiceServer(srv, s.mixedMemberSvc)
 <%- else %>
 		// TODO: 注册 gRPC 服务
 		// pb.RegisterXxxServiceServer(srv, s.xxxSvc)
@@ -68,7 +73,13 @@ func (s *<% .ServiceName %>Gateway) registerHTTPHandlers() {
 		if err := pb.Register<% .ExampleService %>ServiceHandlerServer(ctx, mux, s.exampleSvc); err != nil {
 			return err
 		}
-		return secondpb.Register<% .SecondService %>ServiceHandlerServer(ctx, mux, s.secondSvc)
+		if err := secondpb.Register<% .SecondService %>ServiceHandlerServer(ctx, mux, s.secondSvc); err != nil {
+			return err
+		}
+		if err := mixedpb.Register<% .MixedService %>ServiceHandlerServer(ctx, mux, s.mixedSvc); err != nil {
+			return err
+		}
+		return mixedpb.Register<% .MixedService %>MemberServiceHandlerServer(ctx, mux, s.mixedMemberSvc)
 	}); err != nil {
 		gwglobal.LOGGER.Fatal("注册 HTTP handler 失败 | failed to register HTTP handler: %v", err)
 	}

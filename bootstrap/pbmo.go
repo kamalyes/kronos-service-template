@@ -36,6 +36,12 @@ func registerConverters() {
 <%- if eq .GenerateExample "true" %>
 	pbmo.Register[models.<% .ExampleService %>Model, commonpb.<% .ExampleService %>Info]()
 	pbmo.Register[models.<% .SecondService %>Model, commonpb.<% .SecondService %>Info]()
+	pbmo.Register[models.<% .MixedService %>Model, commonpb.<% .MixedService %>Info]()
+	pbmo.Register[models.<% .MixedService %>MemberModel, commonpb.<% .MixedService %>MemberInfo]()
+	// IsPrimary ↔ Primary 名字对不上，显式声明映射；其余字段同名自动配对
+	// [EN] IsPrimary and Primary differ by name, so the mapping is declared explicitly
+	pbmo.Register[models.<% .MixedService %>RegionAssignmentModel, commonpb.<% .MixedService %>RegionAssignment]().
+		WithFieldMapping("IsPrimary", "Primary")
 <%- else %>
 	// TODO: 注册本服务的 Model-PB 转换器
 	// pbmo.Register[models.XxxModel, commonpb.XxxInfo]()

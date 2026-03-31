@@ -22,6 +22,8 @@ type RepositoryFactory struct {
 <%- if eq .GenerateExample "true" %>
 	<% .ExampleService %> *<% .ExampleService %>Repository
 	<% .SecondService %>  *<% .SecondService %>Repository
+	<% .MixedService %>   *<% .MixedService %>Repository
+	<% .MixedService %>Member *<% .MixedService %>MemberRepository
 <%- else %>
 	// TODO: 添加仓库字段
 <%- end %>
@@ -39,6 +41,8 @@ func NewRepositoryFactory() *RepositoryFactory {
 <%- if eq .GenerateExample "true" %>
 			<% .ExampleService %>: New<% .ExampleService %>Repository(),
 			<% .SecondService %>:  New<% .SecondService %>Repository(),
+			<% .MixedService %>:   New<% .MixedService %>Repository(),
+			<% .MixedService %>Member: New<% .MixedService %>MemberRepository(),
 <%- else %>
 			// TODO: 初始化仓库
 <%- end %>

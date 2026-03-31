@@ -29,6 +29,8 @@ type <% .ServiceName %>Gateway struct {
 	// exampleSvc 实现协议中心的 <% .ExampleService %>ServiceServer
 	exampleSvc *service.<% .ExampleService %>Service
 	secondSvc  *service.<% .SecondService %>Service
+	mixedSvc   *service.<% .MixedService %>Service
+	mixedMemberSvc *service.<% .MixedService %>MemberService
 <%- end %>
 }
 

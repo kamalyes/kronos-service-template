@@ -16,6 +16,9 @@ var (
 <%- if eq .GenerateExample "true" %>
 	TableName<% .ExampleService %> = <% .ExampleService %>Model{}.TableName()
 	TableName<% .SecondService %>  = <% .SecondService %>Model{}.TableName()
+	TableName<% .MixedService %>   = <% .MixedService %>Model{}.TableName()
+	TableName<% .MixedService %>RegionAssignment = <% .MixedService %>RegionAssignmentModel{}.TableName()
+	TableName<% .MixedService %>Member = <% .MixedService %>MemberModel{}.TableName()
 <%- else %>
 	// TODO: 添加表名常量
 	// TableNameExample = ExampleModel{}.TableName()
