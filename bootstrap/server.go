@@ -57,6 +57,10 @@ func (s *<% .ServiceName %>Gateway) Run() error {
 		return err
 	}
 
+	// 先配日志上下文字段，之后所有启动日志和业务日志都带齐链路字段
+	// [EN] Configure the log context fields first so every later log carries them
+	configureLoggerContext()
+
 	gwglobal.LOGGER.Info("Initializing services...")
 	s.initServices()
 
