@@ -31,7 +31,7 @@ import (
 // [EN] Roles are a repeated enum. A join table is worth it only when members must be looked up
 // by role; a boolean column per role means a schema change per new role. A JSON array is used
 // here because the set is always read and written together with the member.
-type <% .MixedService %>MemberRoles = sqlbuilder.Slice[int32]
+type <% .MixedService %>MemberRoles = sqlbuilder.Slice[enumspb.<% .MixedService %>MemberRole]
 
 // <% .MixedService %>MemberModel 对应协议中心 common.<% .MixedService %>MemberInfo
 type <% .MixedService %>MemberModel struct {
@@ -41,7 +41,7 @@ type <% .MixedService %>MemberModel struct {
 	DisplayName string                        `gorm:"column:display_name;type:varchar(64);comment:显示名" json:"display_name"`
 	Email       string                        `gorm:"column:email;type:varchar(128);comment:邮箱" json:"email"`
 	Roles       <% .MixedService %>MemberRoles `gorm:"column:roles;type:json;comment:角色列表" json:"roles"`
-	Status      int32                         `gorm:"column:status;type:int;default:0;not null;comment:状态" json:"status"`
+	Status      enumspb.CommonStatus          `gorm:"column:status;type:int;default:0;not null;comment:状态" json:"status"`
 	JoinedAt    time.Time                     `gorm:"column:joined_at;autoCreateTime;comment:加入时间" json:"joined_at"`
 }
 
@@ -61,31 +61,30 @@ func (m *<% .MixedService %>MemberModel) GetID() string { return m.Id }
 // GetTenantID 实现 repository.TenantScoped
 func (m *<% .MixedService %>MemberModel) GetTenantID() string { return m.TenantId }
 
-// SetRoles 写入角色集合，入参是 PB 的枚举切片
+// SetRoles 写入角色集合，入参直接是 PB 的枚举切片
+//
+// 落库类型就是 Slice[enums.<% .MixedService %>MemberRole]，与 PB 同构，
+// 所以这里是一次类型转换而不是逐元素搬运——不要把枚举退化成 int32 存，
+// 那样读出来还得转回去，而且落库的 JSON 里只剩数字，看日志时无从对照
+//
+// [EN] The stored type is Slice of the same enum as the PB, so this is one conversion rather
+// than an element-by-element copy. Storing the enum as int32 would force a conversion back on
+// read and leave only bare numbers in the stored JSON
 func (m *<% .MixedService %>MemberModel) SetRoles(roles []enumspb.<% .MixedService %>MemberRole) {
-	out := make(<% .MixedService %>MemberRoles, 0, len(roles))
-	for _, r := range roles {
-		out = append(out, int32(r))
-	}
-	m.Roles = out
+	m.Roles = <% .MixedService %>MemberRoles(roles)
 }
 
 // ToPB 转换为协议中心的成员消息
 //
-// Roles 两侧不同构（落库是 []int32，PB 是 []enums.<% .MixedService %>MemberRole），
-// pbmo 配不上，显式转一遍
-// [EN] Roles is not structurally identical across the boundary, so it is converted explicitly
+// Roles 两侧同构（Slice[T] 的底层类型就是 []T，元素都是同一个枚举），pbmo 自动搬运，
+// 不需要在这里手工转——conversion_contract_test.go 里断言了这一点，
+// 哪天协议把角色枚举换了名字，那个测试会先红
+//
+// [EN] Roles is structurally identical on both sides, since Slice[T] is defined as []T over the
+// same enum, so pbmo copies it automatically. The contract test asserts this, and it is what
+// turns a renamed enum in the contract into a test failure instead of a silently empty field
 func (m *<% .MixedService %>MemberModel) ToPB(ctx context.Context) (*commonpb.<% .MixedService %>MemberInfo, error) {
-	info, err := bizerror.ToPB[<% .MixedService %>MemberModel, commonpb.<% .MixedService %>MemberInfo](ctx, m)
-	if err != nil {
-		return nil, err
-	}
-	roles := make([]enumspb.<% .MixedService %>MemberRole, 0, len(m.Roles))
-	for _, r := range m.Roles {
-		roles = append(roles, enumspb.<% .MixedService %>MemberRole(r))
-	}
-	info.Roles = roles
-	return info, nil
+	return bizerror.ToPB[<% .MixedService %>MemberModel, commonpb.<% .MixedService %>MemberInfo](ctx, m)
 }
 
 // ToPBs<% .MixedService %>Member 批量转换

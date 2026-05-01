@@ -16,6 +16,7 @@ import (
 	"time"
 
 	commonpb "<% .ShareProtoModule %>/pb/common"
+	enumspb "<% .ShareProtoModule %>/pb/enums"
 	bizerror "github.com/kamalyes/go-bizerror"
 	sqlbuilder "github.com/kamalyes/go-sqlbuilder"
 	sqltypes "github.com/kamalyes/go-sqlbuilder/types"
@@ -47,9 +48,9 @@ type <% .ExampleService %>Model struct {
 
 	// 枚举落库存数值：枚举名会随 proto 调整，数值由 proto 的字段号固定下来
 	// [EN] Enums are stored numerically: names change with the proto, numbers are pinned by it
-	Type   int32 `gorm:"column:type;type:int;default:0;not null;comment:类型" json:"type"`
-	Level  int32 `gorm:"column:level;type:int;default:0;not null;comment:等级" json:"level"`
-	Status int32 `gorm:"column:status;type:int;default:0;not null;index:idx_<% .ExampleService | snake %>s_status;comment:状态" json:"status"`
+	Type   enumspb.<% .ExampleService %>Type  `gorm:"column:type;type:int;default:0;not null;comment:类型" json:"type"`
+	Level  enumspb.<% .ExampleService %>Level `gorm:"column:level;type:int;default:0;not null;comment:等级" json:"level"`
+	Status enumspb.CommonStatus `gorm:"column:status;type:int;default:0;not null;index:idx_<% .ExampleService | snake %>s_status;comment:状态" json:"status"`
 
 	Contact sqltypes.ProtoJSON[*commonpb.<% .ExampleService %>Contact] `gorm:"column:contact;type:json;comment:联系方式" json:"contact"`
 	Tags    sqlbuilder.StringSlice                                       `gorm:"column:tags;type:json;comment:标签列表" json:"tags"`

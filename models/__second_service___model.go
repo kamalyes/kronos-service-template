@@ -16,6 +16,7 @@ import (
 	"time"
 
 	commonpb "<% .ShareProtoModule %>/pb/common"
+	enumspb "<% .ShareProtoModule %>/pb/enums"
 	bizerror "github.com/kamalyes/go-bizerror"
 )
 
@@ -34,8 +35,8 @@ type <% .SecondService %>Model struct {
 	Name      string    `gorm:"column:name;type:varchar(64);not null;comment:名称" json:"name"`
 	Code      string    `gorm:"column:code;type:varchar(32);not null;comment:编码" json:"code"`
 	IconUrl   string    `gorm:"column:icon_url;type:varchar(512);comment:图标地址" json:"icon_url"`
-	Category  int32     `gorm:"column:category;type:int;default:0;not null;comment:分类" json:"category"`
-	Status    int32     `gorm:"column:status;type:int;default:0;not null;index:idx_<% .SecondService | snake %>s_status;comment:状态" json:"status"`
+	Category  enumspb.<% .SecondService %>Category `gorm:"column:category;type:int;default:0;not null;comment:分类" json:"category"`
+	Status    enumspb.CommonStatus `gorm:"column:status;type:int;default:0;not null;index:idx_<% .SecondService | snake %>s_status;comment:状态" json:"status"`
 	SortOrder int32     `gorm:"column:sort_order;type:int;default:0;not null;comment:排序序号" json:"sort_order"`
 	CreatedAt time.Time `gorm:"column:created_at;autoCreateTime;comment:创建时间" json:"created_at"`
 	UpdatedAt time.Time `gorm:"column:updated_at;autoUpdateTime;comment:更新时间" json:"updated_at"`

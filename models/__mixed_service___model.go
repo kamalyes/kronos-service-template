@@ -16,6 +16,7 @@ import (
 	"time"
 
 	commonpb "<% .ShareProtoModule %>/pb/common"
+	enumspb "<% .ShareProtoModule %>/pb/enums"
 	bizerror "github.com/kamalyes/go-bizerror"
 )
 
@@ -44,8 +45,8 @@ type <% .MixedService %>Model struct {
 	Id         string `gorm:"column:id;type:varchar(36);primaryKey;comment:主键ID" json:"id"`
 	Code       string `gorm:"column:code;type:varchar(32);not null;uniqueIndex:uk_<% .MixedService | snake %>s_code;comment:编码（全局唯一）" json:"code"`
 	Name       string `gorm:"column:name;type:varchar(64);not null;comment:名称" json:"name"`
-	Status     int32  `gorm:"column:status;type:int;default:0;not null;index:idx_<% .MixedService | snake %>s_status;comment:状态" json:"status"`
-	SyncState  int32  `gorm:"column:sync_state;type:int;default:0;not null;comment:下游同步状态" json:"sync_state"`
+	Status     enumspb.<% .MixedService %>Status    `gorm:"column:status;type:int;default:0;not null;index:idx_<% .MixedService | snake %>s_status;comment:状态" json:"status"`
+	SyncState  enumspb.<% .MixedService %>SyncState `gorm:"column:sync_state;type:int;default:0;not null;comment:下游同步状态" json:"sync_state"`
 	PlatformId string `gorm:"column:platform_id;type:varchar(36);not null;comment:平台ID" json:"platform_id"`
 	RegionId   string `gorm:"column:region_id;type:varchar(36);comment:主地区ID" json:"region_id"`
 
