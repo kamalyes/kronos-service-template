@@ -12,26 +12,11 @@ package repository
 
 import (
 	"context"
-	"encoding/json"
-	"time"
 
 	cachex "github.com/kamalyes/go-cachex"
-	gwglobal "github.com/kamalyes/go-rpc-gateway/global"
 	sqlconstants "github.com/kamalyes/go-sqlbuilder/constants"
 	sqlrepo "github.com/kamalyes/go-sqlbuilder/repository"
 )
-
-// DefaultCacheTTL 单条详情的缓存时长
-//
-// 比配置里的 cache.default-ttl（24h）短得多：详情是会被改的，TTL 是失效漏掉时的兜底，
-// 不是主要失效手段。主要手段是写路径显式删键。
-// TTL 定得长会让一次漏删的影响持续很久，定得短则缓存形同虚设，分钟级是常见折中。
-//
-// [EN] Much shorter than the configured cache.default-ttl: a detail row changes, so the TTL is
-// the backstop for a missed invalidation, not the primary mechanism — explicit deletion on the
-// write path is. A long TTL makes one missed deletion linger; a very short one makes the cache
-// pointless.
-const DefaultCacheTTL = 5 * time.Minute
 
 // TenantScoped 要求实体能报出自己的主键与所属租户
 //
@@ -65,34 +50,25 @@ func NewCachedRepository[T any](entity, tableName string) *CachedRepository[T] {
 	}
 }
 
-// cacheKey 构造缓存键
+// modelCache 取本实体已注册的整实例缓存
 //
-// 键里必须带 tenantID：缓存键是另一个越权读的入口，只用 id 做键的话，
-// A 租户读过的记录会被 B 租户命中。配置里的 cache.key-prefix 由缓存实现自己加，
-// 这里不重复拼。
+// 用非 panic 的 GetModelCache：缓存是可选的。Redis 没配时 bootstrap 会跳过注册
+// （见 bootstrap/kvcache.go），这里拿不到就退回直查数据库，功能照常。
+// 用 MustGetModelCache 会让「没开 Redis」变成启动即崩。
 //
-// [EN] The key must include the tenant: a cache key is another cross-tenant read hole, since an
-// id-only key lets tenant B hit what tenant A loaded. The configured key-prefix is added by the
-// cache implementation itself and is not repeated here.
-func (r *CachedRepository[T]) cacheKey(tenantID, id string) []byte {
-	return []byte(r.entity + ":" + tenantID + ":" + id)
-}
-
-// cache 取网关构建好的缓存实例
+// 缓存键由注册时声明的 KeyFields 决定，本基座统一按 (TenantId, Id) 注册——
+// 键里必须带租户：缓存键是另一个越权读的口子，A 租户读过的记录会被 B 租户命中。
 //
-// 缓存实例由网关的 PoolManager 按 resources 里的 cache 段构建（type / enabled /
-// default-ttl / key-prefix 都在那里），服务不自己建连接。
-// 配置里 enabled 为 false 或连接池未初始化时返回 nil，调用方自动退化为直查数据库。
-//
-// [EN] The cache is built by the gateway's PoolManager from the cache section in resources, so
-// the service never creates its own connection. It returns nil when disabled or uninitialized,
-// and callers degrade to a direct query.
-func (r *CachedRepository[T]) cache() *cachex.CtxCache {
-	if gwglobal.POOL_MANAGER == nil {
+// [EN] GetModelCache rather than MustGetModelCache, because the cache is optional: bootstrap
+// skips registration when Redis is absent and this falls back to a direct query. The key is
+// whatever KeyFields was registered with, and this base always registers (TenantId, Id): the
+// tenant must be in the key, or the cache becomes another cross-tenant read hole.
+func (r *CachedRepository[T]) modelCache() *cachex.ModelCache[T] {
+	c, err := cachex.GetModelCache[T]()
+	if err != nil {
 		return nil
 	}
-	c := gwglobal.POOL_MANAGER.GetCache()
-	return &c
+	return c
 }
 
 // GetByIDScoped 按主键查询并校验租户归属
@@ -113,45 +89,39 @@ func (r *CachedRepository[T]) GetByIDScoped(ctx context.Context, tenantID, id st
 
 // GetByIDCached 带缓存的单条查询
 //
-// 用 GetOrCompute 而不是「先 Get 再 Set」：后者在缓存未命中且并发量大时，
-// 所有请求会同时穿到数据库（缓存击穿）。GetOrCompute 内部用 singleflight 去重，
-// 同一个键并发未命中时只有一个请求执行 loader，其余等它的结果。
+// 三层兜底由 go-cachex 的 ModelCache 提供：本地分片缓存 → Redis Hash →
+// 按键精准回源数据库。不自己写「先 Get 再 Set」那套，原因有三个，
+// 每一个都是手写版本一定会漏的：
 //
-// 未找到的记录不写缓存：写了就要再处理空值穿透与空值失效两件事，
-// 而「不存在」通常不是高频查询，收益不抵复杂度。
+//  1. 并发未命中会同时穿到数据库（缓存击穿），要自己接 singleflight；
+//  2. 本地缓存改了之后其他副本不知道，要自己接失效广播——单副本测不出来，
+//     多副本上线后表现为「改完有的节点生效有的不生效」；
+//  3. 回源查询要按缺失的键精准查，不是整表捞。
 //
-// [EN] GetOrCompute rather than get-then-set: the latter lets every concurrent miss hit the
-// database at once. GetOrCompute deduplicates with singleflight, so one request runs the loader
-// and the rest wait on it. A missing row is not cached: that would add negative caching and its
-// own invalidation, and "not found" is rarely the hot path.
+// 回源仍然带租户条件：ModelCache 注册时的 KeyFields 是 (TenantId, Id)，
+// 它生成的 WHERE 两个条件都带上，所以缓存路径和直查路径的租户隔离是一致的。
+//
+// [EN] ModelCache provides local, Redis and precise per-key database fallback. A hand-rolled
+// get-then-set misses three things every time: concurrent misses all reach the database unless
+// singleflight is wired in; other replicas keep a stale local copy unless invalidation is
+// broadcast, which one replica cannot reveal and production shows as an update landing on some
+// nodes only; and the reload must query the missing keys precisely rather than scan. The
+// reload stays tenant-scoped because KeyFields is (TenantId, Id), so both conditions appear in
+// its WHERE and the cached path isolates tenants exactly as the direct path does.
 func (r *CachedRepository[T]) GetByIDCached(ctx context.Context, tenantID, id string) (*T, error) {
-	c := r.cache()
+	c := r.modelCache()
 	if c == nil {
 		return r.GetByIDScoped(ctx, tenantID, id)
 	}
 
-	raw, err := c.GetOrCompute(ctx, r.cacheKey(tenantID, id), DefaultCacheTTL,
-		func(ctx context.Context) ([]byte, error) {
-			entity, err := r.GetByIDScoped(ctx, tenantID, id)
-			if err != nil {
-				return nil, err
-			}
-			if entity == nil {
-				// 返回 nil 让 GetOrCompute 跳过写缓存
-				// [EN] Returning nil makes GetOrCompute skip the cache write
-				return nil, nil
-			}
-			return json.Marshal(entity)
-		})
-	if err != nil || len(raw) == 0 {
+	entity, found, err := c.Get(ctx, tenantID, id)
+	if err != nil {
 		// 缓存层出错不该让查询失败：退回直查数据库
 		// [EN] A cache failure must not fail the query; fall back to a direct read
 		return r.GetByIDScoped(ctx, tenantID, id)
 	}
-
-	var entity T
-	if err := json.Unmarshal(raw, &entity); err != nil {
-		return r.GetByIDScoped(ctx, tenantID, id)
+	if !found {
+		return nil, nil
 	}
 	return &entity, nil
 }
@@ -162,16 +132,38 @@ func (r *CachedRepository[T]) GetByIDCached(ctx context.Context, tenantID, id st
 // 否则并发更新下两者会错位（A 写库 → B 写库 → B 写缓存 → A 写缓存，缓存留下旧值）。
 // 删键的失败模式只是下一次读多查一次库。
 //
+// ModelCache 的 Delete 会同时清本地、清 Redis 并广播给其他副本，
+// 这正是自己维护 map 做不到的那一步。
+//
 // [EN] The write path deletes the key rather than writing the new value: writing through would
 // need cache and database updated atomically, or concurrent updates leave a stale value
 // (A writes db, B writes db, B writes cache, A writes cache). A failed delete merely costs one
-// extra query on the next read.
+// extra query on the next read. ModelCache's Delete clears the local layer and Redis and
+// broadcasts to the other replicas, which is the step a hand-maintained map cannot do.
 func (r *CachedRepository[T]) Invalidate(ctx context.Context, tenantID, id string) {
-	c := r.cache()
+	c := r.modelCache()
 	if c == nil {
 		return
 	}
-	_ = c.Del(ctx, r.cacheKey(tenantID, id))
+	_ = c.DeleteByKey(ctx, tenantID, id)
+}
+
+// InvalidateMany 批量删键
+//
+// 批量写之后要删的是每条记录各自的键，不是一个「列表键」：列表结果没有进缓存，
+// 进缓存的是单条详情。漏删一条的后果是那一条在 TTL 内读到旧值。
+//
+// [EN] After a batch write the keys to delete are the per-row keys, not some list key: list
+// results are not cached, individual rows are. A missed key means that one row reads stale
+// until its TTL expires.
+func (r *CachedRepository[T]) InvalidateMany(ctx context.Context, tenantID string, ids []string) {
+	c := r.modelCache()
+	if c == nil {
+		return
+	}
+	for _, id := range ids {
+		_ = c.DeleteByKey(ctx, tenantID, id)
+	}
 }
 
 // UpdateScoped 按主键更新并失效缓存
