@@ -3,24 +3,26 @@
  * @Date: <% nowFmt "2006-01-02" %> 00:00:00
  * @LastEditors: <% .AuthorName %> <% .AuthorEmail %>
  * @LastEditTime: <% nowFmt "2006-01-02" %> 00:00:00
- * @FilePath: \<% .ProjectName %>\service\<% .MixedService | snake %>_member_service.go
+ * @FilePath: \<% .ProjectName %>\service\<% .MixedModule %>\<% .MixedService | snake %>_member_service.go
  * @Description: <% .MixedService %>Member 业务逻辑，实现协议中心的 <% .MixedService %>MemberServiceServer
  *
  * Copyright (c) <% .Year %> by <% .AuthorName %>, All Rights Reserved.
  */
-package service
+package <% .MixedModule %>
 <%- if eq .GenerateExample "true" %>
 
 import (
 	"context"
 
 	"github.com/<% .OrgName %>/<% .ProjectName %>/models"
+	"github.com/<% .OrgName %>/<% .ProjectName %>/service/common"
 	"github.com/<% .OrgName %>/<% .ProjectName %>/repository"
 	pb "<% .ShareProtoModule %>/pb/<% .MixedModule %>"
 	commonpb "<% .ShareProtoModule %>/pb/common"
 	enumspb "<% .ShareProtoModule %>/pb/enums"
 	bizerror "github.com/kamalyes/go-bizerror"
 	gwglobal "github.com/kamalyes/go-rpc-gateway/global"
+	gwmiddleware "github.com/kamalyes/go-rpc-gateway/middleware"
 )
 
 // <% .MixedService %>MemberService 实现协议中心 pb.<% .MixedService %>MemberServiceServer
@@ -60,8 +62,8 @@ func (s *<% .MixedService %>MemberService) <% .MixedService %>MemberList(
 
 	items, paging, err := s.repo.ListWithPagination(ctx, tenantID, req)
 	if err != nil {
-		gwglobal.LOGGER.ErrorContextKV(ctx, "分页查询成员失败", logKV(ctx, "id", tenantID, "error", err)...)
-		return nil, dbError(ctx)
+		gwglobal.LOGGER.ErrorContextKV(ctx, "分页查询成员失败", "id", tenantID, "error", err)
+		return nil, common.DBError(ctx)
 	}
 
 	infos, err := models.ToPBs<% .MixedService %>Member(ctx, items)
@@ -81,11 +83,27 @@ func (s *<% .MixedService %>MemberService) <% .MixedService %>MemberAdd(
 ) (*pb.<% .MixedService %>MemberAddResponse, error) {
 	tenantID := req.Get<% .MixedService %>Id()
 
+	// 先校验所属 <% .MixedService %> 存在，再查成员是否重复：
+	// 顺序反了的话，往一个不存在的 <% .MixedService %> 里加成员会「成功」，
+	// 留下一条永远查不到所属主体的孤儿记录。
+	//
+	// 只在缓存可信且确实查不到时才否决——见 common.<% .MixedService %>NameLookup 的说明，
+	// 把「缓存没开」当成「不存在」会让无缓存环境下所有添加成员都失败。
+	//
+	// [EN] Validate the owning aggregate before checking for a duplicate member: the other
+	// order lets a member be added to a nonexistent owner and leaves an orphan row. The
+	// rejection only happens when the cache is trustworthy, since treating an unavailable cache
+	// as a missing row would fail every add in an environment without one.
+	if name, cached := common.<% .MixedService %>NameLookup(ctx, tenantID); cached && name == "" {
+		gwglobal.LOGGER.WarnContextKV(ctx, "所属 <% .MixedService %> 不存在", "id", tenantID)
+		return nil, common.NotFound(ctx)
+	}
+
 	exists, err := s.repo.UserExists(ctx, tenantID, req.GetUserId())
 	if err != nil {
 		gwglobal.LOGGER.ErrorContextKV(ctx, "查询成员是否已存在失败",
-			logKV(ctx, "id", tenantID, "user_id", req.GetUserId(), "error", err)...)
-		return nil, dbError(ctx)
+			"id", tenantID, "user_id", req.GetUserId(), "error", err)
+		return nil, common.DBError(ctx)
 	}
 	if exists {
 		return nil, bizerror.ToGRPCErrorWithTemplate(ctx, bizerror.BizErrCodeConflict,
@@ -97,13 +115,13 @@ func (s *<% .MixedService %>MemberService) <% .MixedService %>MemberAdd(
 		TenantId: tenantID,
 		UserId:   req.GetUserId(),
 		Email:    req.GetEmail(),
-		Status:   int32(enumspb.CommonStatus_COMMON_STATUS_NORMAL),
+		Status:   enumspb.CommonStatus_COMMON_STATUS_NORMAL,
 	}
 	member.SetRoles(req.GetRoles())
 
 	if _, err := s.repo.Create(ctx, member); err != nil {
-		gwglobal.LOGGER.ErrorContextKV(ctx, "添加成员失败", logKV(ctx, "id", tenantID, "error", err)...)
-		return nil, dbError(ctx)
+		gwglobal.LOGGER.ErrorContextKV(ctx, "添加成员失败", "id", tenantID, "error", err)
+		return nil, common.DBError(ctx)
 	}
 
 	info, err := member.ToPB(ctx)
@@ -111,7 +129,7 @@ func (s *<% .MixedService %>MemberService) <% .MixedService %>MemberAdd(
 		return nil, err
 	}
 	gwglobal.LOGGER.InfoContextKV(ctx, "添加成员成功",
-		logKV(ctx, "id", tenantID, "member_id", member.Id, "roles", len(req.GetRoles()))...)
+		"id", tenantID, "member_id", member.Id, "roles", len(req.GetRoles()))
 	return &pb.<% .MixedService %>MemberAddResponse{Info: info}, nil
 }
 
@@ -124,11 +142,11 @@ func (s *<% .MixedService %>MemberService) <% .MixedService %>MemberRemove(
 
 	if err := s.repo.DeleteScoped(ctx, tenantID, memberID); err != nil {
 		gwglobal.LOGGER.ErrorContextKV(ctx, "移除成员失败",
-			logKV(ctx, "id", tenantID, "member_id", memberID, "error", err)...)
-		return nil, dbError(ctx)
+			"id", tenantID, "member_id", memberID, "error", err)
+		return nil, common.DBError(ctx)
 	}
 	gwglobal.LOGGER.InfoContextKV(ctx, "移除成员成功",
-		logKV(ctx, "id", tenantID, "member_id", memberID)...)
+		"id", tenantID, "member_id", memberID)
 	return &commonpb.GeneralEmptyResponse{}, nil
 }
 
@@ -149,18 +167,18 @@ func (s *<% .MixedService %>MemberService) <% .MixedService %>MemberRoleReplace(
 
 	member, err := s.repo.GetByIDScoped(ctx, tenantID, memberID)
 	if err != nil {
-		return nil, dbError(ctx)
+		return nil, common.DBError(ctx)
 	}
 	if member == nil {
-		return nil, notFound(ctx)
+		return nil, common.NotFound(ctx)
 	}
 
 	member.SetRoles(req.GetRoles())
 	if err := s.repo.UpdateScoped(ctx, tenantID, memberID,
 		map[string]interface{}{"roles": member.Roles}); err != nil {
 		gwglobal.LOGGER.ErrorContextKV(ctx, "覆盖成员角色失败",
-			logKV(ctx, "member_id", memberID, "error", err)...)
-		return nil, dbError(ctx)
+			"member_id", memberID, "error", err)
+		return nil, common.DBError(ctx)
 	}
 
 	info, err := member.ToPB(ctx)
@@ -168,7 +186,7 @@ func (s *<% .MixedService %>MemberService) <% .MixedService %>MemberRoleReplace(
 		return nil, err
 	}
 	gwglobal.LOGGER.InfoContextKV(ctx, "覆盖成员角色成功",
-		logKV(ctx, "member_id", memberID, "roles", len(req.GetRoles()))...)
+		"member_id", memberID, "roles", len(req.GetRoles()))
 	return &pb.<% .MixedService %>MemberRoleReplaceResponse{Info: info}, nil
 }
 
@@ -197,8 +215,8 @@ func (s *<% .MixedService %>MemberService) <% .MixedService %>MemberBatchInvite(
 
 	existing, err := s.repo.EmailsExist(ctx, tenantID, emails)
 	if err != nil {
-		gwglobal.LOGGER.ErrorContextKV(ctx, "查询已存在邮箱失败", logKV(ctx, "id", tenantID, "error", err)...)
-		return nil, dbError(ctx)
+		gwglobal.LOGGER.ErrorContextKV(ctx, "查询已存在邮箱失败", "id", tenantID, "error", err)
+		return nil, common.DBError(ctx)
 	}
 
 	results := make([]*commonpb.BatchResult, 0, len(emails))
@@ -212,7 +230,7 @@ func (s *<% .MixedService %>MemberService) <% .MixedService %>MemberBatchInvite(
 			results = append(results, &commonpb.BatchResult{
 				Id:           email,
 				Success:      false,
-				ErrorMessage: gwmiddlewareMsg(ctx, bizerror.BizErrCodeConflict),
+				ErrorMessage: gwmiddleware.GetMsgByKey(ctx, bizerror.BizErrCodeConflict),
 			})
 			continue
 		}
@@ -222,7 +240,7 @@ func (s *<% .MixedService %>MemberService) <% .MixedService %>MemberBatchInvite(
 			results = append(results, &commonpb.BatchResult{
 				Id:           email,
 				Success:      false,
-				ErrorMessage: gwmiddlewareMsg(ctx, bizerror.BizErrCodeConflict),
+				ErrorMessage: gwmiddleware.GetMsgByKey(ctx, bizerror.BizErrCodeConflict),
 			})
 			continue
 		}
@@ -235,7 +253,7 @@ func (s *<% .MixedService %>MemberService) <% .MixedService %>MemberBatchInvite(
 			// 被邀请但未接受的成员先置 DISABLED，接受后再转 NORMAL
 			// [EN] CommonStatus has no PENDING, so an invited-but-unaccepted member starts
 			// DISABLED and moves to NORMAL on acceptance
-			Status:   int32(enumspb.CommonStatus_COMMON_STATUS_DISABLED),
+			Status:   enumspb.CommonStatus_COMMON_STATUS_DISABLED,
 		}
 		member.SetRoles(req.GetRoles())
 		toCreate = append(toCreate, member)
@@ -244,12 +262,12 @@ func (s *<% .MixedService %>MemberService) <% .MixedService %>MemberBatchInvite(
 
 	if err := s.repo.CreateBatchInTx(ctx, toCreate); err != nil {
 		gwglobal.LOGGER.ErrorContextKV(ctx, "批量邀请失败",
-			logKV(ctx, "id", tenantID, "count", len(toCreate), "error", err)...)
-		return nil, dbError(ctx)
+			"id", tenantID, "count", len(toCreate), "error", err)
+		return nil, common.DBError(ctx)
 	}
 
 	gwglobal.LOGGER.InfoContextKV(ctx, "批量邀请完成",
-		logKV(ctx, "id", tenantID, "total", len(emails), "created", len(toCreate))...)
+		"id", tenantID, "total", len(emails), "created", len(toCreate))
 	return &pb.<% .MixedService %>MemberBatchInviteResponse{Results: results}, nil
 }
 <%- end %>

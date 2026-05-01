@@ -18,6 +18,11 @@ import (
 	goconfig "github.com/kamalyes/go-config"
 	gateway "github.com/kamalyes/go-rpc-gateway"
 	gwglobal "github.com/kamalyes/go-rpc-gateway/global"
+<%- if eq .GenerateExample "true" %>
+	<% .ExampleModule %>svc "github.com/<% .OrgName %>/<% .ProjectName %>/service/<% .ExampleModule %>"
+	<% .SecondModule %>svc "github.com/<% .OrgName %>/<% .ProjectName %>/service/<% .SecondModule %>"
+	<% .MixedModule %>svc "github.com/<% .OrgName %>/<% .ProjectName %>/service/<% .MixedModule %>"
+<%- end %>
 )
 
 // <% .ServiceName %>Gateway 服务启动器
@@ -27,10 +32,10 @@ type <% .ServiceName %>Gateway struct {
 	svc     *service.<% .ServiceName %>ServiceImpl
 <%- if eq .GenerateExample "true" %>
 	// exampleSvc 实现协议中心的 <% .ExampleService %>ServiceServer
-	exampleSvc *service.<% .ExampleService %>Service
-	secondSvc  *service.<% .SecondService %>Service
-	mixedSvc   *service.<% .MixedService %>Service
-	mixedMemberSvc *service.<% .MixedService %>MemberService
+	exampleSvc *<% .ExampleModule %>svc.<% .ExampleService %>Service
+	secondSvc  *<% .SecondModule %>svc.<% .SecondService %>Service
+	mixedSvc   *<% .MixedModule %>svc.<% .MixedService %>Service
+	mixedMemberSvc *<% .MixedModule %>svc.<% .MixedService %>MemberService
 <%- end %>
 }
 

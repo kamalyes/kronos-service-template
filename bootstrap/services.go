@@ -18,6 +18,9 @@ import (
 	gwglobal "github.com/kamalyes/go-rpc-gateway/global"
 	"google.golang.org/grpc"
 <%- if eq .GenerateExample "true" %>
+	<% .ExampleModule %>svc "github.com/<% .OrgName %>/<% .ProjectName %>/service/<% .ExampleModule %>"
+	<% .SecondModule %>svc "github.com/<% .OrgName %>/<% .ProjectName %>/service/<% .SecondModule %>"
+	<% .MixedModule %>svc "github.com/<% .OrgName %>/<% .ProjectName %>/service/<% .MixedModule %>"
 	pb "<% .ShareProtoModule %>/pb/<% .ExampleModule %>"
 	secondpb "<% .ShareProtoModule %>/pb/<% .SecondModule %>"
 	mixedpb "<% .ShareProtoModule %>/pb/<% .MixedModule %>"
@@ -37,10 +40,10 @@ func (s *<% .ServiceName %>Gateway) initServices() {
 	s.repo = repository.NewRepositoryFactory()
 	s.svc = service.New<% .ServiceName %>Service(s.repo)
 <%- if eq .GenerateExample "true" %>
-	s.exampleSvc = service.New<% .ExampleService %>Service(s.repo.<% .ExampleService %>)
-	s.secondSvc = service.New<% .SecondService %>Service(s.repo.<% .SecondService %>)
-	s.mixedSvc = service.New<% .MixedService %>Service(s.repo.<% .MixedService %>)
-	s.mixedMemberSvc = service.New<% .MixedService %>MemberService(s.repo.<% .MixedService %>Member)
+	s.exampleSvc = <% .ExampleModule %>svc.New<% .ExampleService %>Service(s.repo.<% .ExampleService %>)
+	s.secondSvc = <% .SecondModule %>svc.New<% .SecondService %>Service(s.repo.<% .SecondService %>)
+	s.mixedSvc = <% .MixedModule %>svc.New<% .MixedService %>Service(s.repo.<% .MixedService %>)
+	s.mixedMemberSvc = <% .MixedModule %>svc.New<% .MixedService %>MemberService(s.repo.<% .MixedService %>Member)
 <%- end %>
 
 	gwglobal.LOGGER.Info("Services initialized")

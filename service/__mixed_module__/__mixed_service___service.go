@@ -3,18 +3,19 @@
  * @Date: <% nowFmt "2006-01-02" %> 00:00:00
  * @LastEditors: <% .AuthorName %> <% .AuthorEmail %>
  * @LastEditTime: <% nowFmt "2006-01-02" %> 00:00:00
- * @FilePath: \<% .ProjectName %>\service\<% .MixedService | snake %>_service.go
+ * @FilePath: \<% .ProjectName %>\service\<% .MixedModule %>\<% .MixedService | snake %>_service.go
  * @Description: <% .MixedService %> 聚合根业务逻辑，实现协议中心的 <% .MixedService %>ServiceServer
  *
  * Copyright (c) <% .Year %> by <% .AuthorName %>, All Rights Reserved.
  */
-package service
+package <% .MixedModule %>
 <%- if eq .GenerateExample "true" %>
 
 import (
 	"context"
 
 	"github.com/<% .OrgName %>/<% .ProjectName %>/models"
+	"github.com/<% .OrgName %>/<% .ProjectName %>/service/common"
 	"github.com/<% .OrgName %>/<% .ProjectName %>/repository"
 	pb "<% .ShareProtoModule %>/pb/<% .MixedModule %>"
 	commonpb "<% .ShareProtoModule %>/pb/common"
@@ -22,6 +23,7 @@ import (
 	bizerror "github.com/kamalyes/go-bizerror"
 	pbmo "github.com/kamalyes/go-pbmo"
 	gwglobal "github.com/kamalyes/go-rpc-gateway/global"
+	gwmiddleware "github.com/kamalyes/go-rpc-gateway/middleware"
 )
 
 // <% .MixedService %>Service 实现协议中心 pb.<% .MixedService %>ServiceServer
@@ -61,8 +63,8 @@ func (s *<% .MixedService %>Service) <% .MixedService %>Create(
 ) (*pb.<% .MixedService %>CreateResponse, error) {
 	exists, err := s.repo.CodeExists(ctx, req.GetCode(), "")
 	if err != nil {
-		gwglobal.LOGGER.ErrorContextKV(ctx, "查询编码是否重复失败", logKV(ctx, "code", req.GetCode(), "error", err)...)
-		return nil, dbError(ctx)
+		gwglobal.LOGGER.ErrorContextKV(ctx, "查询编码是否重复失败", "code", req.GetCode(), "error", err)
+		return nil, common.DBError(ctx)
 	}
 	if exists {
 		return nil, bizerror.ToGRPCErrorWithTemplate(ctx, bizerror.BizErrCodeConflict,
@@ -74,16 +76,16 @@ func (s *<% .MixedService %>Service) <% .MixedService %>Create(
 		Code:       req.GetCode(),
 		Name:       req.GetName(),
 		PlatformId: req.GetPlatformId(),
-		Status:     int32(enumspb.<% .MixedService %>Status_<% .MixedService | snake | upper %>_STATUS_PENDING),
-		SyncState:  int32(enumspb.<% .MixedService %>SyncState_<% .MixedService | snake | upper %>_SYNC_STATE_PENDING),
+		Status:     enumspb.<% .MixedService %>Status_<% .MixedService | snake | upper %>_STATUS_PENDING,
+		SyncState:  enumspb.<% .MixedService %>SyncState_<% .MixedService | snake | upper %>_SYNC_STATE_PENDING,
 	}
 	if ids := req.GetRegionIds(); len(ids) > 0 {
 		model.RegionId = ids[0]
 	}
 
 	if _, err := s.repo.Create(ctx, model); err != nil {
-		gwglobal.LOGGER.ErrorContextKV(ctx, "创建失败", logKV(ctx, "code", req.GetCode(), "error", err)...)
-		return nil, dbError(ctx)
+		gwglobal.LOGGER.ErrorContextKV(ctx, "创建失败", "code", req.GetCode(), "error", err)
+		return nil, common.DBError(ctx)
 	}
 
 	// 初始地区分配：第一个为主地区，其余为非主
@@ -96,8 +98,8 @@ func (s *<% .MixedService %>Service) <% .MixedService %>Create(
 		}
 		if _, err := s.repo.Regions.Create(ctx, assignment); err != nil {
 			gwglobal.LOGGER.ErrorContextKV(ctx, "初始地区分配失败",
-				logKV(ctx, "id", model.Id, "region_id", regionID, "error", err)...)
-			return nil, dbError(ctx)
+				"id", model.Id, "region_id", regionID, "error", err)
+			return nil, common.DBError(ctx)
 		}
 	}
 
@@ -105,8 +107,12 @@ func (s *<% .MixedService %>Service) <% .MixedService %>Create(
 	if err != nil {
 		return nil, err
 	}
+	// 新建的记录立刻进字段级缓存，不等下一次全量刷新
+	// [EN] Put the new row into the field cache now rather than waiting for the next refresh
+	common.RefreshKV(ctx, model)
+
 	gwglobal.LOGGER.InfoContextKV(ctx, "创建成功",
-		logKV(ctx, "id", model.Id, "code", model.Code, "regions", len(req.GetRegionIds()))...)
+		"id", model.Id, "code", model.Code, "regions", len(req.GetRegionIds()))
 	return &pb.<% .MixedService %>CreateResponse{Info: info}, nil
 }
 
@@ -119,11 +125,11 @@ func (s *<% .MixedService %>Service) <% .MixedService %>Get(
 ) (*pb.<% .MixedService %>GetResponse, error) {
 	model, err := s.repo.GetByID(ctx, req.Get<% .MixedService %>Id())
 	if err != nil {
-		gwglobal.LOGGER.ErrorContextKV(ctx, "查询失败", logKV(ctx, "id", req.Get<% .MixedService %>Id(), "error", err)...)
-		return nil, dbError(ctx)
+		gwglobal.LOGGER.ErrorContextKV(ctx, "查询失败", "id", req.Get<% .MixedService %>Id(), "error", err)
+		return nil, common.DBError(ctx)
 	}
 	if model == nil {
-		return nil, notFound(ctx)
+		return nil, common.NotFound(ctx)
 	}
 
 	info, err := model.ToPB(ctx)
@@ -133,7 +139,7 @@ func (s *<% .MixedService %>Service) <% .MixedService %>Get(
 
 	assignments, err := s.repo.ListRegions(ctx, model.Id)
 	if err != nil {
-		return nil, dbError(ctx)
+		return nil, common.DBError(ctx)
 	}
 	regions, err := models.ToPBs<% .MixedService %>RegionAssignment(ctx, assignments)
 	if err != nil {
@@ -150,8 +156,8 @@ func (s *<% .MixedService %>Service) <% .MixedService %>List(
 ) (*pb.<% .MixedService %>ListResponse, error) {
 	items, paging, err := s.repo.ListWithPagination(ctx, req)
 	if err != nil {
-		gwglobal.LOGGER.ErrorContextKV(ctx, "分页查询失败", logKV(ctx, "error", err)...)
-		return nil, dbError(ctx)
+		gwglobal.LOGGER.ErrorContextKV(ctx, "分页查询失败", "error", err)
+		return nil, common.DBError(ctx)
 	}
 
 	infos, err := models.ToPBs<% .MixedService %>(ctx, items)
@@ -172,26 +178,30 @@ func (s *<% .MixedService %>Service) <% .MixedService %>Update(
 	id := req.Get<% .MixedService %>Id()
 	updates := pbmo.NewUpdates().
 		SetIfNotNil("name", req.GetName()).
-		SetIfNotZero("status", int32(req.GetStatus())).
+		SetIfNotZero("status", req.GetStatus()).
 		Build()
 
 	if err := s.repo.UpdateByID(ctx, id, updates); err != nil {
-		gwglobal.LOGGER.ErrorContextKV(ctx, "更新失败", logKV(ctx, "id", id, "error", err)...)
-		return nil, dbError(ctx)
+		gwglobal.LOGGER.ErrorContextKV(ctx, "更新失败", "id", id, "error", err)
+		return nil, common.DBError(ctx)
 	}
 
 	fresh, err := s.repo.GetByID(ctx, id)
 	if err != nil {
-		return nil, dbError(ctx)
+		return nil, common.DBError(ctx)
 	}
 	if fresh == nil {
-		return nil, notFound(ctx)
+		return nil, common.NotFound(ctx)
 	}
 	info, err := fresh.ToPB(ctx)
 	if err != nil {
 		return nil, err
 	}
-	gwglobal.LOGGER.InfoContextKV(ctx, "更新成功", logKV(ctx, "id", id, "fields", len(updates))...)
+	// 用刚读回来的那条刷缓存，而不是用 updates 拼一个半成品
+	// [EN] Refresh from the row just read back, not from a partial built out of updates
+	common.RefreshKV(ctx, fresh)
+
+	gwglobal.LOGGER.InfoContextKV(ctx, "更新成功", "id", id, "fields", len(updates))
 	return &pb.<% .MixedService %>UpdateResponse{Info: info}, nil
 }
 
@@ -201,10 +211,12 @@ func (s *<% .MixedService %>Service) <% .MixedService %>Delete(
 ) (*commonpb.GeneralEmptyResponse, error) {
 	id := req.Get<% .MixedService %>Id()
 	if err := s.repo.DeleteWithRegions(ctx, id); err != nil {
-		gwglobal.LOGGER.ErrorContextKV(ctx, "删除失败", logKV(ctx, "id", id, "error", err)...)
-		return nil, dbError(ctx)
+		gwglobal.LOGGER.ErrorContextKV(ctx, "删除失败", "id", id, "error", err)
+		return nil, common.DBError(ctx)
 	}
-	gwglobal.LOGGER.InfoContextKV(ctx, "删除成功", logKV(ctx, "id", id)...)
+	common.InvalidateKV[models.<% .MixedService %>Model](ctx, id)
+
+	gwglobal.LOGGER.InfoContextKV(ctx, "删除成功", "id", id)
 	return &commonpb.GeneralEmptyResponse{}, nil
 }
 
@@ -229,19 +241,19 @@ func (s *<% .MixedService %>Service) <% .MixedService %>RetrySync(
 	id := req.Get<% .MixedService %>Id()
 	model, err := s.repo.GetByID(ctx, id)
 	if err != nil {
-		return nil, dbError(ctx)
+		return nil, common.DBError(ctx)
 	}
 	if model == nil {
-		return nil, notFound(ctx)
+		return nil, common.NotFound(ctx)
 	}
 
 	// 已同步成功且未要求强制时直接返回当前状态，不重复触发
 	// [EN] Already synced and force not requested: return the current state without retriggering
 	synced := enumspb.<% .MixedService %>SyncState_<% .MixedService | snake | upper %>_SYNC_STATE_SYNCED
-	if model.SyncState == int32(synced) && !req.GetForce().GetValue() {
+	if model.SyncState == synced && !req.GetForce().GetValue() {
 		return &pb.<% .MixedService %>RetrySyncResponse{
 			SyncState: synced,
-			Message:   gwmiddlewareMsg(ctx, "<% .MixedService | snake %>.sync.already_synced"),
+			Message:   gwmiddleware.GetMsgByKey(ctx, "<% .MixedService | snake %>.sync.already_synced"),
 		}, nil
 	}
 
@@ -252,17 +264,17 @@ func (s *<% .MixedService %>Service) <% .MixedService %>RetrySync(
 	// "triggered, awaiting the downstream" maps to PENDING. Adding a state requires changing
 	// the hub; inventing a numeric value here would decode as unknown downstream
 	next := enumspb.<% .MixedService %>SyncState_<% .MixedService | snake | upper %>_SYNC_STATE_PENDING
-	updates := pbmo.NewUpdates().Set("sync_state", int32(next)).Build()
+	updates := pbmo.NewUpdates().Set("sync_state", next).Build()
 	if err := s.repo.UpdateByID(ctx, id, updates); err != nil {
-		gwglobal.LOGGER.ErrorContextKV(ctx, "更新同步状态失败", logKV(ctx, "id", id, "error", err)...)
-		return nil, dbError(ctx)
+		gwglobal.LOGGER.ErrorContextKV(ctx, "更新同步状态失败", "id", id, "error", err)
+		return nil, common.DBError(ctx)
 	}
 
 	gwglobal.LOGGER.InfoContextKV(ctx, "已触发下游同步",
-		logKV(ctx, "id", id, "force", req.GetForce().GetValue())...)
+		"id", id, "force", req.GetForce().GetValue())
 	return &pb.<% .MixedService %>RetrySyncResponse{
 		SyncState: next,
-		Message:   gwmiddlewareMsg(ctx, "<% .MixedService | snake %>.sync.triggered"),
+		Message:   gwmiddleware.GetMsgByKey(ctx, "<% .MixedService | snake %>.sync.triggered"),
 	}, nil
 }
 
@@ -277,16 +289,16 @@ func (s *<% .MixedService %>Service) <% .MixedService %>RegionAssign(
 	// keys are not enabled in every deployment
 	parent, err := s.repo.GetByID(ctx, tenantID)
 	if err != nil {
-		return nil, dbError(ctx)
+		return nil, common.DBError(ctx)
 	}
 	if parent == nil {
-		return nil, notFound(ctx)
+		return nil, common.NotFound(ctx)
 	}
 
 	if req.GetPrimary() {
 		if err := s.repo.ClearPrimaryRegion(ctx, tenantID); err != nil {
-			gwglobal.LOGGER.ErrorContextKV(ctx, "清除原主地区失败", logKV(ctx, "id", tenantID, "error", err)...)
-			return nil, dbError(ctx)
+			gwglobal.LOGGER.ErrorContextKV(ctx, "清除原主地区失败", "id", tenantID, "error", err)
+			return nil, common.DBError(ctx)
 		}
 	}
 
@@ -298,8 +310,8 @@ func (s *<% .MixedService %>Service) <% .MixedService %>RegionAssign(
 	}
 	if _, err := s.repo.Regions.Create(ctx, assignment); err != nil {
 		gwglobal.LOGGER.ErrorContextKV(ctx, "分配地区失败",
-			logKV(ctx, "id", tenantID, "region_id", req.GetRegionId(), "error", err)...)
-		return nil, dbError(ctx)
+			"id", tenantID, "region_id", req.GetRegionId(), "error", err)
+		return nil, common.DBError(ctx)
 	}
 
 	pbAssignment, err := assignment.ToPB(ctx)
@@ -307,7 +319,7 @@ func (s *<% .MixedService %>Service) <% .MixedService %>RegionAssign(
 		return nil, err
 	}
 	gwglobal.LOGGER.InfoContextKV(ctx, "分配地区成功",
-		logKV(ctx, "id", tenantID, "assignment_id", assignment.Id, "primary", req.GetPrimary())...)
+		"id", tenantID, "assignment_id", assignment.Id, "primary", req.GetPrimary())
 	return &pb.<% .MixedService %>RegionAssignResponse{Assignment: pbAssignment}, nil
 }
 
@@ -323,28 +335,28 @@ func (s *<% .MixedService %>Service) <% .MixedService %>RegionAssignmentUpdate(
 	// it the caller could edit someone else's sub-resource
 	current, err := s.repo.Regions.GetByIDScoped(ctx, tenantID, assignmentID)
 	if err != nil {
-		return nil, dbError(ctx)
+		return nil, common.DBError(ctx)
 	}
 	if current == nil {
-		return nil, notFound(ctx)
+		return nil, common.NotFound(ctx)
 	}
 
 	if req.GetPrimary() != nil && req.GetPrimary().GetValue() {
 		if err := s.repo.ClearPrimaryRegion(ctx, tenantID); err != nil {
-			return nil, dbError(ctx)
+			return nil, common.DBError(ctx)
 		}
 	}
 
 	updates := pbmo.NewUpdates().SetIfNotNil("is_primary", req.GetPrimary()).Build()
 	if err := s.repo.Regions.UpdateScoped(ctx, tenantID, assignmentID, updates); err != nil {
 		gwglobal.LOGGER.ErrorContextKV(ctx, "更新地区分配失败",
-			logKV(ctx, "assignment_id", assignmentID, "error", err)...)
-		return nil, dbError(ctx)
+			"assignment_id", assignmentID, "error", err)
+		return nil, common.DBError(ctx)
 	}
 
 	fresh, err := s.repo.Regions.GetByIDScoped(ctx, tenantID, assignmentID)
 	if err != nil || fresh == nil {
-		return nil, dbError(ctx)
+		return nil, common.DBError(ctx)
 	}
 	pbAssignment, err := fresh.ToPB(ctx)
 	if err != nil {
@@ -362,11 +374,11 @@ func (s *<% .MixedService %>Service) <% .MixedService %>RegionAssignmentRemove(
 
 	if err := s.repo.Regions.DeleteScoped(ctx, tenantID, assignmentID); err != nil {
 		gwglobal.LOGGER.ErrorContextKV(ctx, "移除地区分配失败",
-			logKV(ctx, "assignment_id", assignmentID, "error", err)...)
-		return nil, dbError(ctx)
+			"assignment_id", assignmentID, "error", err)
+		return nil, common.DBError(ctx)
 	}
 	gwglobal.LOGGER.InfoContextKV(ctx, "移除地区分配成功",
-		logKV(ctx, "id", tenantID, "assignment_id", assignmentID)...)
+		"id", tenantID, "assignment_id", assignmentID)
 	return &commonpb.GeneralEmptyResponse{}, nil
 }
 <%- end %>

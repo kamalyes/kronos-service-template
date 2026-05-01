@@ -3,18 +3,19 @@
  * @Date: <% nowFmt "2006-01-02" %> 00:00:00
  * @LastEditors: <% .AuthorName %> <% .AuthorEmail %>
  * @LastEditTime: <% nowFmt "2006-01-02" %> 00:00:00
- * @FilePath: \<% .ProjectName %>\service\<% .ExampleService | snake %>_service.go
+ * @FilePath: \<% .ProjectName %>\service\<% .ExampleModule %>\<% .ExampleService | snake %>_service.go
  * @Description: <% .ExampleService %> 业务逻辑层，实现协议中心的 <% .ExampleService %>ServiceServer
  *
  * Copyright (c) <% .Year %> by <% .AuthorName %>, All Rights Reserved.
  */
-package service
+package <% .ExampleModule %>
 <%- if eq .GenerateExample "true" %>
 
 import (
 	"context"
 
 	"github.com/<% .OrgName %>/<% .ProjectName %>/models"
+	"github.com/<% .OrgName %>/<% .ProjectName %>/service/common"
 	"github.com/<% .OrgName %>/<% .ProjectName %>/repository"
 	pb "<% .ShareProtoModule %>/pb/<% .ExampleModule %>"
 	commonpb "<% .ShareProtoModule %>/pb/common"
@@ -60,15 +61,15 @@ func New<% .ExampleService %>Service(repo *repository.<% .ExampleService %>Repos
 func (s *<% .ExampleService %>Service) <% .ExampleService %>Create(
 	ctx context.Context, req *pb.<% .ExampleService %>CreateRequest,
 ) (*pb.<% .ExampleService %>CreateResponse, error) {
-	tenantID, err := tenantOf(ctx)
+	tenantID, err := common.TenantOf(ctx)
 	if err != nil {
 		return nil, err
 	}
 
 	exists, err := s.repo.ExistsByField(ctx, tenantID, "code", req.GetCode(), "")
 	if err != nil {
-		gwglobal.LOGGER.ErrorContextKV(ctx, "查询编码是否重复失败", logKV(ctx, "code", req.GetCode(), "error", err)...)
-		return nil, dbError(ctx)
+		gwglobal.LOGGER.ErrorContextKV(ctx, "查询编码是否重复失败", "code", req.GetCode(), "error", err)
+		return nil, common.DBError(ctx)
 	}
 	if exists {
 		// 带 {reason} 模板的错误码：文案由 go-bizerror 按请求语言渲染，
@@ -83,23 +84,23 @@ func (s *<% .ExampleService %>Service) <% .ExampleService %>Create(
 		TenantId: tenantID,
 		Name:     req.GetName(),
 		Code:     req.GetCode(),
-		Type:     int32(req.GetType()),
-		Level:    int32(req.GetLevel()),
-		Status:   int32(enumspb.CommonStatus_COMMON_STATUS_NORMAL),
+		Type:     req.GetType(),
+		Level:    req.GetLevel(),
+		Status:   enumspb.CommonStatus_COMMON_STATUS_NORMAL,
 		Tags:     req.GetTags(),
 	}
 	model.SetContact(req.GetContact())
 
 	if _, err := s.repo.Create(ctx, model); err != nil {
-		gwglobal.LOGGER.ErrorContextKV(ctx, "创建失败", logKV(ctx, "code", req.GetCode(), "error", err)...)
-		return nil, dbError(ctx)
+		gwglobal.LOGGER.ErrorContextKV(ctx, "创建失败", "code", req.GetCode(), "error", err)
+		return nil, common.DBError(ctx)
 	}
 
 	info, err := model.ToPB(ctx)
 	if err != nil {
 		return nil, err
 	}
-	gwglobal.LOGGER.InfoContextKV(ctx, "创建成功", logKV(ctx, "id", model.Id, "code", model.Code)...)
+	gwglobal.LOGGER.InfoContextKV(ctx, "创建成功", "id", model.Id, "code", model.Code)
 	return &pb.<% .ExampleService %>CreateResponse{Info: info}, nil
 }
 
@@ -107,18 +108,18 @@ func (s *<% .ExampleService %>Service) <% .ExampleService %>Create(
 func (s *<% .ExampleService %>Service) <% .ExampleService %>Get(
 	ctx context.Context, req *pb.<% .ExampleService %>GetRequest,
 ) (*pb.<% .ExampleService %>GetResponse, error) {
-	tenantID, err := tenantOf(ctx)
+	tenantID, err := common.TenantOf(ctx)
 	if err != nil {
 		return nil, err
 	}
 
 	model, err := s.repo.GetByIDCached(ctx, tenantID, req.Get<% .ExampleService %>Id())
 	if err != nil {
-		gwglobal.LOGGER.ErrorContextKV(ctx, "查询失败", logKV(ctx, "id", req.Get<% .ExampleService %>Id(), "error", err)...)
-		return nil, dbError(ctx)
+		gwglobal.LOGGER.ErrorContextKV(ctx, "查询失败", "id", req.Get<% .ExampleService %>Id(), "error", err)
+		return nil, common.DBError(ctx)
 	}
 	if model == nil {
-		return nil, notFound(ctx)
+		return nil, common.NotFound(ctx)
 	}
 
 	info, err := model.ToPB(ctx)
@@ -132,15 +133,15 @@ func (s *<% .ExampleService %>Service) <% .ExampleService %>Get(
 func (s *<% .ExampleService %>Service) <% .ExampleService %>List(
 	ctx context.Context, req *pb.<% .ExampleService %>ListRequest,
 ) (*pb.<% .ExampleService %>ListResponse, error) {
-	tenantID, err := tenantOf(ctx)
+	tenantID, err := common.TenantOf(ctx)
 	if err != nil {
 		return nil, err
 	}
 
 	items, paging, err := s.repo.ListWithPagination(ctx, tenantID, req)
 	if err != nil {
-		gwglobal.LOGGER.ErrorContextKV(ctx, "分页查询失败", logKV(ctx, "error", err)...)
-		return nil, dbError(ctx)
+		gwglobal.LOGGER.ErrorContextKV(ctx, "分页查询失败", "error", err)
+		return nil, common.DBError(ctx)
 	}
 
 	infos, err := models.ToPBs<% .ExampleService %>(ctx, items)
@@ -171,7 +172,7 @@ func (s *<% .ExampleService %>Service) <% .ExampleService %>List(
 func (s *<% .ExampleService %>Service) <% .ExampleService %>Update(
 	ctx context.Context, req *pb.<% .ExampleService %>UpdateRequest,
 ) (*pb.<% .ExampleService %>UpdateResponse, error) {
-	tenantID, err := tenantOf(ctx)
+	tenantID, err := common.TenantOf(ctx)
 	if err != nil {
 		return nil, err
 	}
@@ -179,15 +180,15 @@ func (s *<% .ExampleService %>Service) <% .ExampleService %>Update(
 	id := req.Get<% .ExampleService %>Id()
 	model, err := s.repo.GetByIDCached(ctx, tenantID, id)
 	if err != nil {
-		return nil, dbError(ctx)
+		return nil, common.DBError(ctx)
 	}
 	if model == nil {
-		return nil, notFound(ctx)
+		return nil, common.NotFound(ctx)
 	}
 
 	builder := pbmo.NewUpdates().
 		SetIfNotNil("name", req.GetName()).
-		SetIfNotZero("level", int32(req.GetLevel()))
+		SetIfNotZero("level", req.GetLevel())
 
 	// tags 用一个独立的布尔开关控制是否覆盖：空数组既可能是「清空」也可能是「没传」，
 	// 协议中心为此在请求里专门加了 update_tags
@@ -208,15 +209,15 @@ func (s *<% .ExampleService %>Service) <% .ExampleService %>Update(
 	updates := builder.Build()
 	if len(updates) > 0 {
 		if err := s.repo.UpdateScoped(ctx, tenantID, id, updates); err != nil {
-			gwglobal.LOGGER.ErrorContextKV(ctx, "更新失败", logKV(ctx, "id", id, "error", err)...)
-			return nil, dbError(ctx)
+			gwglobal.LOGGER.ErrorContextKV(ctx, "更新失败", "id", id, "error", err)
+			return nil, common.DBError(ctx)
 		}
-		gwglobal.LOGGER.InfoContextKV(ctx, "更新成功", logKV(ctx, "id", id, "fields", len(updates))...)
+		gwglobal.LOGGER.InfoContextKV(ctx, "更新成功", "id", id, "fields", len(updates))
 	}
 
 	fresh, err := s.repo.GetByIDCached(ctx, tenantID, id)
 	if err != nil || fresh == nil {
-		return nil, dbError(ctx)
+		return nil, common.DBError(ctx)
 	}
 	info, err := fresh.ToPB(ctx)
 	if err != nil {
@@ -229,7 +230,7 @@ func (s *<% .ExampleService %>Service) <% .ExampleService %>Update(
 func (s *<% .ExampleService %>Service) <% .ExampleService %>UpdateStatus(
 	ctx context.Context, req *pb.<% .ExampleService %>UpdateStatusRequest,
 ) (*pb.<% .ExampleService %>UpdateStatusResponse, error) {
-	tenantID, err := tenantOf(ctx)
+	tenantID, err := common.TenantOf(ctx)
 	if err != nil {
 		return nil, err
 	}
@@ -247,12 +248,12 @@ func (s *<% .ExampleService %>Service) <% .ExampleService %>UpdateStatus(
 	// SetInt32Val 收的是 *wrapperspb.Int32Value（给可选字段用）；
 	// status 这里是必填枚举，已是确定值，直接 Set
 	// [EN] SetInt32Val takes a wrapper for optional fields; status is a required enum here
-	updates := pbmo.NewUpdates().Set("status", int32(req.GetStatus())).Build()
+	updates := pbmo.NewUpdates().Set("status", req.GetStatus()).Build()
 	if err := s.repo.UpdateScoped(ctx, tenantID, id, updates); err != nil {
-		gwglobal.LOGGER.ErrorContextKV(ctx, "更新状态失败", logKV(ctx, "id", id, "error", err)...)
-		return nil, dbError(ctx)
+		gwglobal.LOGGER.ErrorContextKV(ctx, "更新状态失败", "id", id, "error", err)
+		return nil, common.DBError(ctx)
 	}
-	gwglobal.LOGGER.InfoContextKV(ctx, "更新状态成功", logKV(ctx, "id", id, "status", req.GetStatus().String())...)
+	gwglobal.LOGGER.InfoContextKV(ctx, "更新状态成功", "id", id, "status", req.GetStatus().String())
 	return &pb.<% .ExampleService %>UpdateStatusResponse{}, nil
 }
 
@@ -260,17 +261,17 @@ func (s *<% .ExampleService %>Service) <% .ExampleService %>UpdateStatus(
 func (s *<% .ExampleService %>Service) <% .ExampleService %>Delete(
 	ctx context.Context, req *pb.<% .ExampleService %>DeleteRequest,
 ) (*pb.<% .ExampleService %>DeleteResponse, error) {
-	tenantID, err := tenantOf(ctx)
+	tenantID, err := common.TenantOf(ctx)
 	if err != nil {
 		return nil, err
 	}
 
 	id := req.Get<% .ExampleService %>Id()
 	if err := s.repo.DeleteScoped(ctx, tenantID, id); err != nil {
-		gwglobal.LOGGER.ErrorContextKV(ctx, "删除失败", logKV(ctx, "id", id, "error", err)...)
-		return nil, dbError(ctx)
+		gwglobal.LOGGER.ErrorContextKV(ctx, "删除失败", "id", id, "error", err)
+		return nil, common.DBError(ctx)
 	}
-	gwglobal.LOGGER.InfoContextKV(ctx, "删除成功", logKV(ctx, "id", id)...)
+	gwglobal.LOGGER.InfoContextKV(ctx, "删除成功", "id", id)
 	return &pb.<% .ExampleService %>DeleteResponse{}, nil
 }
 
@@ -284,7 +285,7 @@ func (s *<% .ExampleService %>Service) <% .ExampleService %>Delete(
 func (s *<% .ExampleService %>Service) <% .ExampleService %>BatchDelete(
 	ctx context.Context, req *pb.<% .ExampleService %>BatchDeleteRequest,
 ) (*pb.<% .ExampleService %>BatchDeleteResponse, error) {
-	tenantID, err := tenantOf(ctx)
+	tenantID, err := common.TenantOf(ctx)
 	if err != nil {
 		return nil, err
 	}
@@ -306,7 +307,7 @@ func (s *<% .ExampleService %>Service) <% .ExampleService %>BatchDelete(
 	}
 
 	gwglobal.LOGGER.InfoContextKV(ctx, "批量删除完成",
-		logKV(ctx, "total", len(ids), "failed", failed)...)
+		"total", len(ids), "failed", failed)
 	return &pb.<% .ExampleService %>BatchDeleteResponse{Results: results}, nil
 }
 <%- end %>

@@ -391,6 +391,15 @@ rename:
     value: "<% .ServiceName | snake %>"
   - pattern: "__module_name__"
     value: "<% .ModuleName %>"
+  # 模块目录名：service/ 下按业务模块分包，与 proto/ 的模块划分一一对应
+  # [EN] Module directory names: service/ is split into one package per business module,
+  # matching the module layout under proto/
+  - pattern: "__example_module__"
+    value: "<% .ExampleModule %>"
+  - pattern: "__second_module__"
+    value: "<% .SecondModule %>"
+  - pattern: "__mixed_module__"
+    value: "<% .MixedModule %>"
   - pattern: "__example_service__"
     value: "<% .ExampleService | snake %>"
   - pattern: "__second_service__"
