@@ -307,6 +307,12 @@ questions:
     default: Tenant
     required: true
 
+  - name: DemoRemoteService
+    prompt: "服务间调用 demo 的下游服务名（对应 grpc.clients 的 key）| Downstream service name for the service-to-service demo"
+    type: string
+    default: "<% .SecondModule %>-service"
+    required: true
+
   - name: PipelineRepo
     prompt: "复用型工作流仓库（CI 复用它；不用 CI 可删 .github/workflows）| Reusable-workflow repository used by CI"
     type: string

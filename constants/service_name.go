@@ -13,3 +13,23 @@ package constants
 
 // ServiceName 服务名称
 const ServiceName = "<% .ProjectName %>"
+<%- if eq .GenerateExample "true" %>
+
+// 远程服务名 | Remote service names
+//
+// 这里的字符串必须与 resources/<% .GatewayPrefix %>-dev.yaml 里 grpc.clients
+// 的 key 完全一致——连接池是按服务名索引的，对不上就是「配了也拿不到连接」，
+// 而且 InitClient 只返回 ok=false，没有任何报错，表现为那条调用静默退化成
+// 「下游未配置」。所以两边都引用同一个常量，别在任何一侧写字面量。
+//
+// [EN] These strings must match the keys under grpc.clients in the resources file exactly: the
+// connection pool is indexed by service name, and a mismatch means the client is configured yet
+// never resolves. InitClient merely returns false with no error, so the call silently degrades
+// to "downstream not configured". Reference this constant on both sides rather than writing the
+// literal anywhere.
+const (
+	// RemoteService<% .SecondService %> 服务间调用 demo 的下游服务
+	// [EN] The downstream service used by the service-to-service demo
+	RemoteService<% .SecondService %> = "<% .DemoRemoteService %>"
+)
+<%- end %>

@@ -63,7 +63,45 @@ grpc:
         keepalive-timeout: 10
         connection-timeout: 20
         enable-reflection: true
-    clients: {}
+    # gRPC 客户端：key 就是服务名，代码里用 constants.RemoteService* 引用同一个字符串
+    #
+    # 为什么要用这里的配置而不是在代码里 grpc.NewClient：网关的连接池
+    # （go-rpc-gateway/cpool/grpc）在拨号时自动挂上一整条客户端拦截器链——
+    # 请求上下文透传（trace_id / request_id / tenant_id / authorization /
+    # accept-language 等三十余个字段）、调用日志、健康检查短路，
+    # 外加 otelgrpc 客户端 handler 打通全链路 trace。
+    # 自己拨号这些全都没有，表现为下游日志里租户和链路字段全空。
+    #
+    # endpoints 留空或整个 key 不存在时，InitClient 返回 ok=false，
+    # 调用方按「未配置」处理（见 service/common/client.go），不会启动失败。
+    #
+    # [EN] The key is the service name, referenced in code through constants.RemoteService*.
+    # Use this config rather than dialing directly: the gateway's connection pool attaches the
+    # whole client interceptor chain when it dials, propagating request context (trace id,
+    # request id, tenant id, authorization, accept-language and some thirty more fields), call
+    # logging and health-check short-circuiting, plus the otelgrpc client handler for end-to-end
+    # tracing. A hand-rolled dial gets none of it, which shows up as empty tenant and trace
+    # fields in the downstream logs. An absent key or empty endpoints makes InitClient return
+    # false and the caller treats the client as unconfigured instead of failing to start.
+    clients:
+<%- if eq .GenerateExample "true" %>
+        <% .DemoRemoteService %>:
+            service-name: <% .DemoRemoteService %>
+            # 本地没有这个下游时留空即可：同步 worker 会跳过，不影响启动
+            # [EN] Leave empty when no such downstream exists locally; the worker skips it
+            endpoints: []
+            network: tcp4
+            connection-timeout: 5
+            keepalive-time: 120
+            keepalive-timeout: 10
+            max-recv-msg-size: 4194304
+            max-send-msg-size: 4194304
+            # false：下游不可用时立刻失败，而不是把调用方挂住等它起来
+            # [EN] false: fail fast when the downstream is down instead of blocking the caller
+            wait-for-ready: false
+<%- else %>
+        {}
+<%- end %>
 
 # ===========================================
 # 缓存（Redis）

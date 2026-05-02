@@ -16,6 +16,7 @@ import (
 
 	"github.com/<% .OrgName %>/<% .ProjectName %>/models"
 	pb "<% .ShareProtoModule %>/pb/<% .MixedModule %>"
+	enumspb "<% .ShareProtoModule %>/pb/enums"
 	sqlconstants "github.com/kamalyes/go-sqlbuilder/constants"
 	sqlrepo "github.com/kamalyes/go-sqlbuilder/repository"
 )
@@ -130,6 +131,38 @@ func (r *<% .MixedService %>Repository) ListWithPagination(
 	q.AddSafeOrderFromSort(req.GetSort(), "created_at", "DESC", <% .MixedService %>SortableFields)
 
 	return r.ListWithPagination32(ctx, q)
+}
+
+// ListBySyncState 按同步状态取一批，供后台同步 worker 拉取待处理项
+//
+// 必须带 limit：worker 每轮只处理一批，不是把全表捞进内存。待同步积压到几万条
+// 是完全可能的（下游挂了一夜），一次性捞出来会直接把内存打爆，
+// 而且那一轮的失败会让这几万条全部重来。
+//
+// 排序字段是代码写死的，不是请求参数，所以用 AddOrderAsc 而不是 AddSafeOrder——
+// 后者的白名单是用来防用户传入任意列名的，这里没有用户输入要防。
+// 按 updated_at 升序：先处理等得最久的，避免新进来的一直插队、
+// 早期失败的那几条永远排在后面饿死。
+//
+// 没有加 FOR UPDATE SKIP LOCKED：多副本同时跑 worker 会重复处理同一批。
+// demo 里可以接受（同步操作做成幂等的即可），真要跑多副本请在这里加行锁，
+// 或者把拉取改成单副本的 leader 来做。
+//
+// [EN] The limit is mandatory: the worker handles one batch per round rather than loading the
+// table, since a backlog of tens of thousands is entirely possible after a downstream outage
+// and would exhaust memory while making one round's failure replay all of it. Ordering by
+// updated_at ascending processes the longest-waiting first, so new arrivals do not starve rows
+// that failed early. There is no FOR UPDATE SKIP LOCKED, so several replicas running the worker
+// would process the same batch: acceptable for a demo provided the sync is idempotent, but a
+// real multi-replica deployment needs a row lock here or a single-leader fetch.
+func (r *<% .MixedService %>Repository) ListBySyncState(
+	ctx context.Context, state enumspb.<% .MixedService %>SyncState, limit int,
+) ([]*models.<% .MixedService %>Model, error) {
+	q := sqlrepo.NewQuery().
+		AddFilter(sqlrepo.NewEqFilter("sync_state", state)).
+		WithPaging(1, limit).
+		AddOrderAsc("updated_at")
+	return r.List(ctx, q)
 }
 
 // UpdateByID 按主键更新

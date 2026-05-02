@@ -56,4 +56,15 @@ const (
 	// ModelKVLoadTTL 同一次刷新内多个字段共用一次全表查询的去重窗口
 	// [EN] The window in which several fields of one refresh share a single full-table query
 	ModelKVLoadTTL = 30 * time.Second
+
+	// RemoteHealthCheckInterval 下游 gRPC 服务的健康探测间隔
+	//
+	// 这个值决定「下游挂了多久之后调用方才知道」。定得太长，调用方会在一整个
+	// 间隔里持续把请求送进一个已经死掉的下游，每次都付一次连接超时；
+	// 定得太短，几十个下游就是一片心跳噪声。十秒量级是常见折中。
+	//
+	// [EN] This sets how long it takes a caller to learn the downstream is gone. Too long and
+	// callers keep feeding requests into a dead service, paying a connection timeout each time;
+	// too short and a few dozen downstreams become a wall of heartbeats.
+	RemoteHealthCheckInterval = 10 * time.Second
 )

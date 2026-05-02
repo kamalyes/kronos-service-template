@@ -69,6 +69,9 @@ func (s *<% .ServiceName %>Gateway) Run() error {
 	gwglobal.LOGGER.Info("Registering cache...")
 	s.registerKvCache()
 
+	gwglobal.LOGGER.Info("Initializing gRPC clients...")
+	s.initClients()
+
 	gwglobal.LOGGER.Info("Initializing services...")
 	s.initServices()
 
