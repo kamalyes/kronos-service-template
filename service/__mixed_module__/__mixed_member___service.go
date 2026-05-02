@@ -111,7 +111,7 @@ func (s *<% .MixedService %>MemberService) <% .MixedService %>MemberAdd(
 	}
 
 	member := &models.<% .MixedService %>MemberModel{
-		Id:       models.NewSnowflakeID(),
+		Id:       models.NewID(),
 		TenantId: tenantID,
 		UserId:   req.GetUserId(),
 		Email:    req.GetEmail(),
@@ -246,7 +246,7 @@ func (s *<% .MixedService %>MemberService) <% .MixedService %>MemberBatchInvite(
 		}
 
 		member := &models.<% .MixedService %>MemberModel{
-			Id:       models.NewSnowflakeID(),
+			Id:       models.NewID(),
 			TenantId: tenantID,
 			Email:    email,
 			// CommonStatus 只有 UNSPECIFIED / NORMAL / DISABLED，没有 PENDING：

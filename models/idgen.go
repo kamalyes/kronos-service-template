@@ -26,6 +26,24 @@ import (
 // dependency direction is service → repository → models, so this must sit at the bottom;
 // in service the two lower layers could not use it without an import cycle.
 
+// 三个 ID 来源，分别用在什么地方 | The three id sources and where each belongs
+//
+//	NewID()             业务实体的主键。装配了中心分发器就走号段，否则退回 Snowflake。
+//	                    新建实体一律用这个，不要直接用 NewSnowflakeID。
+//	NewSnowflakeID()    本地生成，不依赖外部。NewID 的降级目标，也用于那些
+//	                    明确不需要跨实例唯一性保证的场合。
+//	NewDeterministicID() 由业务键推导，同 key 恒同值，用于需要幂等的内置数据。
+//
+// 为什么默认不直接用 Snowflake：见 models/idsource.go 开头，Deployment 下
+// worker id 是哈希取模出来的，槽位只有 32 个，副本一多就会撞。
+//
+// [EN] NewID is the primary key for business entities and is what entity creation should call;
+// it uses the dispenser when one is assembled and falls back to Snowflake otherwise.
+// NewSnowflakeID is local and dependency-free, serving as that fallback and as the choice where
+// cross-instance uniqueness is explicitly not required. NewDeterministicID derives a stable id
+// from a business key for idempotent seeding. The reason Snowflake is not the default is at the
+// top of models/idsource.go: a Deployment hashes its worker id into only 32 slots.
+
 // NewSnowflakeID 生成一个新的短 ID 字符串
 //
 // 委托给网关的全局生成器，不自建：网关启动时已按 osx.GetWorkerIdForSnowflake() 与

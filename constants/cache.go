@@ -57,6 +57,28 @@ const (
 	// [EN] The window in which several fields of one refresh share a single full-table query
 	ModelKVLoadTTL = 30 * time.Second
 
+	// IDSequenceLength 分发器序列号的零填充位数
+	//
+	// 位数不够不会出错（Go 的 %0*d 超了就自然变长），只是 ID 长度会跳变，
+	// 对按长度做校验或截断的下游是个隐患。按单个时间片内的峰值发号量取值。
+	//
+	// [EN] Too few digits is not an error, since the format simply widens, but the id length
+	// then jumps, which trips any downstream that validates or truncates by length.
+	IDSequenceLength = 8
+
+	// IDSequenceExpire 序列号键的存活时长
+	//
+	// 必须大于一个时间片（默认按小时发号），否则当前时间片的键会在用着的时候过期，
+	// 序列从头开始，于是同一小时内发出重复 ID。留两倍以上余量。
+	//
+	// [EN] Must exceed one time bucket, hourly by default, or the key in active use expires, the
+	// sequence restarts and duplicate ids follow within the same hour. Leave at least double.
+	IDSequenceExpire = 3 * time.Hour
+
+	// IDBlockSize 一次向分发器申领多少个 ID
+	// [EN] How many ids are claimed from the dispenser at once
+	IDBlockSize = 200
+
 	// RemoteHealthCheckInterval 下游 gRPC 服务的健康探测间隔
 	//
 	// 这个值决定「下游挂了多久之后调用方才知道」。定得太长，调用方会在一整个

@@ -67,7 +67,7 @@ func (s *<% .SecondService %>Service) <% .SecondService %>Create(
 	}
 
 	model := &models.<% .SecondService %>Model{
-		Id:        models.NewSnowflakeID(),
+		Id:        models.NewID(),
 		TenantId:  tenantID,
 		Name:      req.GetName(),
 		Code:      req.GetCode(),

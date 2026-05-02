@@ -66,6 +66,9 @@ func (s *<% .ServiceName %>Gateway) Run() error {
 	// [EN] Configure the log context fields first so every later log carries them
 	configureLoggerContext()
 
+	gwglobal.LOGGER.Info("Initializing ID dispenser...")
+	s.initIDDispenser()
+
 	gwglobal.LOGGER.Info("Registering cache...")
 	s.registerKvCache()
 

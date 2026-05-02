@@ -80,7 +80,7 @@ func (s *<% .ExampleService %>Service) <% .ExampleService %>Create(
 	}
 
 	model := &models.<% .ExampleService %>Model{
-		Id:       models.NewSnowflakeID(),
+		Id:       models.NewID(),
 		TenantId: tenantID,
 		Name:     req.GetName(),
 		Code:     req.GetCode(),

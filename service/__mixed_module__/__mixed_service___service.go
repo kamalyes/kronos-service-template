@@ -72,7 +72,7 @@ func (s *<% .MixedService %>Service) <% .MixedService %>Create(
 	}
 
 	model := &models.<% .MixedService %>Model{
-		Id:         models.NewSnowflakeID(),
+		Id:         models.NewID(),
 		Code:       req.GetCode(),
 		Name:       req.GetName(),
 		PlatformId: req.GetPlatformId(),
@@ -91,7 +91,7 @@ func (s *<% .MixedService %>Service) <% .MixedService %>Create(
 	// 初始地区分配：第一个为主地区，其余为非主
 	for i, regionID := range req.GetRegionIds() {
 		assignment := &models.<% .MixedService %>RegionAssignmentModel{
-			Id:        models.NewSnowflakeID(),
+			Id:        models.NewID(),
 			TenantId:  model.Id,
 			RegionId:  regionID,
 			IsPrimary: i == 0,
@@ -303,7 +303,7 @@ func (s *<% .MixedService %>Service) <% .MixedService %>RegionAssign(
 	}
 
 	assignment := &models.<% .MixedService %>RegionAssignmentModel{
-		Id:        models.NewSnowflakeID(),
+		Id:        models.NewID(),
 		TenantId:  tenantID,
 		RegionId:  req.GetRegionId(),
 		IsPrimary: req.GetPrimary(),
