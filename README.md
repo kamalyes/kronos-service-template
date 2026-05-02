@@ -48,7 +48,7 @@
 │   ├── factory.go              # RepositoryFactory 单例
 │   └── __example_name___repository.go  # 示例仓库（可选）
 ├── resources/                   # 配置文件
-│   └── __gateway_prefix__-dev.yaml     # 唯一环境配置；新增环境见下方说明
+│   └── __project_name__-dev.yaml     # 唯一环境配置；新增环境见下方说明
 ├── service/                     # 业务逻辑层
 │   ├── idgen.go                # Snowflake ID 生成器
 │   ├── __service_name__.go     # 主服务实现
@@ -120,7 +120,6 @@ kopy new git@github.com:kamalyes/kronos-service-template.git -o ./<% .ProjectNam
   --var AuthorName=kamalyes \
   --var AuthorEmail=dev@example.com \
   --var GoVersion=1.25 \
-  --var GatewayPrefix=gateway-payment \
   --var GRPCPort=9190 \
   --var HTTPPort=8190 \
   --var HealthPort=8191 \
@@ -172,10 +171,10 @@ go run main.go
 | `AuthorName` | string | `kamalyes` | 作者名称 |
 | `AuthorEmail` | string | `example@qq.com` | 作者邮箱 |
 | `GoVersion` | select | `1.25` | Go 版本（1.22/1.23/1.24/1.25） |
-| `GatewayPrefix` | string | `gateway-<% .ServiceType %>` | 网关配置前缀 |
 | `GRPCPort` | int | `9190` | gRPC 端口 |
 | `HTTPPort` | int | `8190` | HTTP 端口 |
 | `HealthPort` | int | `8191` | 健康检查端口 |
+| `DemoRemoteService` | string | `<% .SecondModule %>-service` | 服务间调用 demo 的下游服务名 |
 | `DBName` | string | `<% .ServiceType \| snake %>_service` | 数据库名称 |
 | `CachePrefix` | string | `<% .ServiceType \| snake %>:` | 缓存键前缀 |
 | `MetricsNamespace` | string | `<% .ServiceType \| snake %>` | 监控指标命名空间 |
@@ -190,11 +189,16 @@ go run main.go
 
 | 模式 | 替换为 | 说明 |
 |------|--------|------|
-| `__project_name__` | `<% .ProjectName %>` | 项目名称 |
-| `__service_name__` | `<% .ServiceName \| snake %>` | 服务名称（蛇形） |
+| `__project_name__` | `<% .ProjectName %>` | 项目名称（也是配置文件前缀）|
+| `__service_name__` | `<% .ServiceName \| snake %>` | 服务名称（蛇形）|
 | `__module_name__` | `<% .ModuleName %>` | 模块名称 |
-| `__example_name__` | `<% .ExampleService \| snake %>` | 示例实体名称（蛇形） |
-| `__gateway_prefix__` | `<% .GatewayPrefix %>` | 网关配置前缀 |
+| `__example_module__` | `<% .ExampleModule %>` | 示例模块目录（service/ 下分包）|
+| `__second_module__` | `<% .SecondModule %>` | 第二模块目录 |
+| `__mixed_module__` | `<% .MixedModule %>` | 混合模块目录 |
+| `__example_service__` | `<% .ExampleService \| snake %>` | 示例实体（蛇形）|
+| `__second_service__` | `<% .SecondService \| snake %>` | 第二实体（蛇形）|
+| `__mixed_service__` | `<% .MixedService \| snake %>` | 混合模块聚合根（蛇形）|
+| `__mixed_member__` | `<% .MixedService \| snake %>_member` | 混合模块成员实体 |
 | `__ai_home__` | `<% .AiAssistant %>` | AI 规范目录（.trae / .claude / .cursor / .vscode）|
 
 ## 🔤 命名转换函数

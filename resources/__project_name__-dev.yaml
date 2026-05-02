@@ -1,6 +1,6 @@
 # =====================================================================
 # <% .ServiceName %> Service - Gateway 配置（本地开发）
-# 文件名约定: <% .GatewayPrefix %>-{environment}.yaml
+# 文件名约定: <% .ProjectName %>-{environment}.yaml
 # =====================================================================
 
 module-name: gateway

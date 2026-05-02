@@ -13,6 +13,7 @@ package bootstrap
 import (
 	"fmt"
 	gruntime "github.com/grpc-ecosystem/grpc-gateway/v2/runtime"
+	"github.com/<% .OrgName %>/<% .ProjectName %>/constants"
 	"github.com/<% .OrgName %>/<% .ProjectName %>/repository"
 	"github.com/<% .OrgName %>/<% .ProjectName %>/service"
 	goconfig "github.com/kamalyes/go-config"
@@ -46,10 +47,24 @@ func New<% .ServiceName %>Gateway() *<% .ServiceName %>Gateway {
 
 // Run 启动服务
 func (s *<% .ServiceName %>Gateway) Run() error {
+	// 配置前缀取 constants.ServiceName，不写字面量
+	//
+	// go-config 按 <前缀>-<环境别名>.yaml 匹配配置文件，所以前缀和文件名必须一致。
+	// 两处各写一个字符串的话，改了一处忘了另一处就是启动即崩：
+	//   ❌ 未找到前缀为 'xxx' 的配置文件
+	// 而这个报错只在真正启动时出现，编译期毫无提示。
+	// 都从同一个常量来，这件事结构上就不可能分叉——
+	// resources/ 下的文件名也由同一个变量渲染（见 kopy.yaml 的 __project_name__）。
+	//
+	// [EN] go-config matches <prefix>-<env alias>.yaml, so the prefix and the file name must
+	// agree. With a literal in each place, changing one and forgetting the other fails at
+	// startup with "config file with prefix not found" and nothing at compile time. Taking both
+	// from one constant makes divergence structurally impossible, since the file name under
+	// resources/ is rendered from the same variable.
 	gw, err := gateway.NewGateway().
 		WithSearchPath("resources").
 		WithEnvironment(goconfig.GetEnvironment()).
-		WithPrefix("<% .GatewayPrefix %>").
+		WithPrefix(constants.ServiceName).
 		WithHotReload(nil).
 		Build()
 	if err != nil {

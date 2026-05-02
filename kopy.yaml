@@ -189,12 +189,6 @@ questions:
     type: int
     default: "8191"
 
-  - name: GatewayPrefix
-    prompt: "网关配置前缀（决定 resources/<prefix>-<env>.yaml 的文件名）| Gateway config prefix, names resources/<prefix>-<env>.yaml"
-    type: string
-    default: "gateway-<% .ServiceType %>"
-    required: true
-
   - name: DBName
     prompt: "数据库名称 | Database name"
     type: string
@@ -414,8 +408,6 @@ rename:
     value: "<% .MixedService | snake %>_member"
   - pattern: "__mixed_service__"
     value: "<% .MixedService | snake %>"
-  - pattern: "__gateway_prefix__"
-    value: "<% .GatewayPrefix %>"
 
 # ============================================================================
 # 生命周期钩子 | Lifecycle hooks

@@ -114,7 +114,7 @@ echo ✅ 初始化完成
 echo ========================================
 echo.
 echo 下一步：
-echo   go run .                               启动服务（读 resources\<% .GatewayPrefix %>-dev.yaml）
+echo   go run .                               启动服务（读 resources\<% .ProjectName %>-dev.yaml）
 echo   git add -A ^&^& git commit -m "chore: bootstrap <% .ModuleName %>"
 echo.
 echo 接入 proto 定义的 service：在 bootstrap\services.go 的两个 TODO 处注册 gRPC 与 HTTP handler。

@@ -17,7 +17,7 @@ const ServiceName = "<% .ProjectName %>"
 
 // 远程服务名 | Remote service names
 //
-// 这里的字符串必须与 resources/<% .GatewayPrefix %>-dev.yaml 里 grpc.clients
+// 这里的字符串必须与 resources/<% .ProjectName %>-dev.yaml 里 grpc.clients
 // 的 key 完全一致——连接池是按服务名索引的，对不上就是「配了也拿不到连接」，
 // 而且 InitClient 只返回 ok=false，没有任何报错，表现为那条调用静默退化成
 // 「下游未配置」。所以两边都引用同一个常量，别在任何一侧写字面量。

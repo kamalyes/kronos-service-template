@@ -21,7 +21,7 @@ import (
 //
 // 租户只认上下文，不认请求体：请求体里的 tenant_id 是调用方可控的，拿它过滤等于没过滤。
 // 上下文里的值由网关的 request_context 中间件按 resources 配置的
-// authorization-sources 解析出来（见 resources/<% .GatewayPrefix %>-dev.yaml）。
+// authorization-sources 解析出来（见 resources/<% .ProjectName %>-dev.yaml）。
 //
 // [EN] The tenant comes from the context only, never the request body, which the caller
 // controls. The gateway's request_context middleware resolves it per the configured sources.
