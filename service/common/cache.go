@@ -14,6 +14,7 @@ package common
 import (
 	"context"
 
+	"github.com/<% .OrgName %>/<% .ProjectName %>/constants"
 	"github.com/<% .OrgName %>/<% .ProjectName %>/models"
 	cachex "github.com/kamalyes/go-cachex"
 )
@@ -34,6 +35,37 @@ import (
 // for an unknown field name rather than failing, so a missed rename degrades silently to empty
 // values. All lookups use the non-panicking GetModelKV because the cache is optional, and
 // GetFieldMany is nil-safe, so an unregistered cache simply yields no values.
+
+// <% .MixedService %>IDByCode 按 code 反查 id，第二个返回值表示答案是否可信
+//
+// 和 <% .MixedService %>NameLookup 一样的三态语义：cached 为 false 表示缓存不可用，
+// 不是「这个 code 不存在」。把两者混为一谈会让无缓存环境下所有按 code 的查询
+// 都判为不存在。
+//
+// 这个索引走的是自定义 RegisterKV（见 bootstrap/kvcache.go），
+// 不是 ModelKV——方向是「字段 → 主键」，ModelKV 只能「主键 → 字段」。
+//
+// [EN] The same three-state contract as the name lookup: a cached value of false means the
+// cache is unavailable, not that the code is absent, and conflating the two makes every lookup
+// by code fail where no cache is configured. This index comes from a custom RegisterKV rather
+// than ModelKV, because the direction is field to primary key and ModelKV only does the reverse.
+func <% .MixedService %>IDByCode(ctx context.Context, code string) (string, bool) {
+	if code == "" {
+		return "", true
+	}
+	kv, err := cachex.GetKV[string, string](constants.KVCache<% .MixedService %>IDByCode)
+	if err != nil {
+		return "", false
+	}
+	id, found, err := kv.Get(ctx, code)
+	if err != nil {
+		return "", false
+	}
+	if !found {
+		return "", true
+	}
+	return id, true
+}
 
 // RefreshKV 写后刷新字段级缓存，泛型覆盖所有注册过 ModelKV 的实体
 //

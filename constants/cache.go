@@ -30,6 +30,17 @@ const (
 	KVNamespace<% .MixedModule | pascal %> = "<% .ProjectName %>:<% .MixedModule %>"
 )
 
+// KVCache<% .MixedService %>IDByCode code → id 反向索引的注册名
+//
+// 自定义 RegisterKV 必须自己起名，而 ModelKV 的名字是「表名:字段名」自动派生的。
+// 这个名字要避开所有自动派生出来的名字，否则注册时 panic。
+// 带上 by_code 这种方向标识，比叫 <% .MixedService | snake %>s 清楚得多。
+//
+// [EN] A custom RegisterKV names itself, while ModelKV derives its name from table and field.
+// This name must avoid every derived one or registration panics; spelling out the direction is
+// clearer than reusing the table name.
+const KVCache<% .MixedService %>IDByCode = "<% .MixedService | snake %>s:by_code"
+
 // 缓存时长 | Cache durations
 const (
 	// TTLModelCache 整实例缓存的 TTL
@@ -56,6 +67,17 @@ const (
 	// ModelKVLoadTTL 同一次刷新内多个字段共用一次全表查询的去重窗口
 	// [EN] The window in which several fields of one refresh share a single full-table query
 	ModelKVLoadTTL = 30 * time.Second
+
+	// CacheWarmupTimeout 启动预热的总超时
+	//
+	// 预热要把每张注册过 ModelKV 的表扫一遍，所以这个值随表的数量和行数增长。
+	// 超时只会让预热不完整（缓存退化为按需加载），不影响启动。
+	// 定得太小就等于没预热，而且不会有人注意到。
+	//
+	// [EN] Warmup scans every table with a registered ModelKV, so this grows with their number
+	// and size. Exceeding it leaves the warmup incomplete and the caches on-demand rather than
+	// failing startup. Too small a value means no warmup at all, and nobody notices.
+	CacheWarmupTimeout = 2 * time.Minute
 
 	// IDSequenceLength 分发器序列号的零填充位数
 	//

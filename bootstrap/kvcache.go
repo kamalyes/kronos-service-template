@@ -11,10 +11,12 @@
 package bootstrap
 
 import (
-	"github.com/<% .OrgName %>/<% .ProjectName %>/constants"
 	cachex "github.com/kamalyes/go-cachex"
 	gwglobal "github.com/kamalyes/go-rpc-gateway/global"
 <%- if eq .GenerateExample "true" %>
+	"context"
+
+	"github.com/<% .OrgName %>/<% .ProjectName %>/constants"
 	"github.com/<% .OrgName %>/<% .ProjectName %>/models"
 <%- end %>
 )
@@ -144,6 +146,75 @@ func (s *<% .ServiceName %>Gateway) registerKvCache() {
 	cachex.NewModelCache[models.<% .ExampleService %>Model](<% .ExampleModule %>Base, gwglobal.DB).
 		KeyFields("TenantId", "Id").
 		Register()
+
+	// ------------------------------------------------------------------
+	// 反向索引：code → id
+	//
+	// 为什么不能再 NewModelKV[<% .MixedService %>Model] 一次：ModelKV 的注册名是
+	// 「表名:字段名」派生的，不含 namespace。上面已经注册过
+	// <% .MixedService | snake %>s:Name 和 :Code，再注册一次同表同字段会直接 panic
+	// （「already registered」）。而且方向也不对——ModelKV 是「主键 → 字段」，
+	// 这里要的是「字段 → 主键」，是反过来的。
+	//
+	// 所以用 cachex.RegisterKV 自己起一个唯一名字，配一个全量 loader。
+	//
+	// 这里的键是 code，前提是 code 全局唯一（协议中心里它就是这么定义的）。
+	// 千万不要拿「租户内唯一」的列做这种全局索引：一张表一个 Redis Hash，
+	// 不区分租户，两个租户用了同一个 code 就会互相覆盖，
+	// 现象是 A 租户按 code 查出了 B 租户的 ID——越权读，而且不报错。
+	//
+	// [EN] A second NewModelKV on the same table would panic, since the registration name is
+	// derived from table plus field and carries no namespace, and the direction is wrong anyway:
+	// ModelKV maps primary key to field, while a reverse index maps field to primary key. Hence
+	// RegisterKV under a name of its own with a full loader. Keying by code assumes code is
+	// globally unique, as the contract defines it. Never build such a global index on a column
+	// that is only unique per tenant: one table is one Redis hash with no tenant dimension, so
+	// two tenants sharing a code overwrite each other and one tenant resolves the other's id,
+	// which is a cross-tenant read that raises no error.
+	// ------------------------------------------------------------------
+	cachex.RegisterKV[string, string](
+		constants.KVCache<% .MixedService %>IDByCode,
+		load<% .MixedService %>IDByCode,
+		cachex.WithKVNamespace(constants.KVNamespace<% .MixedModule | pascal %>),
+		cachex.WithKVTTL(constants.TTLModelCache),
+		cachex.WithKVRefreshInterval(constants.KVCacheRefreshInterval),
+	)
+
+	// 启动预热：从数据库重新加载并原子替换所有带全量 loader 的缓存
+	//
+	// 不预热会怎样：Redis 里可能还留着上一个版本留下的数据。本地缓存是空的，
+	// 第一次读会从 Redis 拿——拿到的是旧值。而自动刷新要等一个
+	// KVCacheRefreshInterval 才发生，于是发布后的几分钟里接口在拿旧数据，
+	// 期间一切「正常」，没有任何报错。数据迁移之后这个窗口尤其致命。
+	//
+	// 为什么是 WarmupAllKV 而不是自己 Clear 再 Refresh：Clear+Refresh 在
+	// Redis DEL 之后、HSET 之前有一段空窗，这期间所有节点全部 cache miss，
+	// 一起回源 → DB 雪崩。WarmupAllKV 走的是 RefreshAndSwap：先把新数据从库里
+	// 读出来，再用一条 Lua 脚本原子替换（DEL+HSET+EXPIRE），Redis 从旧值直接
+	// 变成新值，没有空窗，最后广播让其他副本清本地缓存重读。
+	//
+	// 只影响带全量 loader 的缓存（ModelKV 的字段缓存、上面那个反向索引）。
+	// ModelCache 注册时 loader 是 nil，是按需回源的，会被安静跳过。
+	//
+    // 超时要留足：预热会把每张注册过的表扫一遍。超时了只是预热不完整
+	// （缓存退化成按需加载），不影响启动，所以这里不处理返回值。
+	//
+	// [EN] Without warmup, Redis may still hold data from the previous release while the local
+	// cache is empty, so the first read fetches a stale value from Redis and the automatic
+	// refresh is a whole interval away: for minutes after a deploy the endpoints serve old data
+	// with everything apparently fine and nothing logged, which is especially damaging right
+	// after a data migration. WarmupAllKV rather than a manual Clear plus Refresh, because the
+	// latter leaves a window between the Redis DEL and the HSET during which every node misses
+	// and reloads at once, stampeding the database. WarmupAllKV uses refresh-and-swap: the new
+	// data is read first and then installed by one Lua script performing DEL, HSET and EXPIRE,
+	// so Redis moves from old value to new with no window, after which other replicas are told
+	// to drop their local copies. Only caches with a full loader are affected; ModelCache
+	// registers a nil loader and is skipped. The timeout must be generous since every
+	// registered table is scanned, and exceeding it merely leaves the warmup incomplete, with
+	// the caches degrading to on-demand loading, so the result is deliberately not fatal.
+	warmupCtx, cancel := context.WithTimeout(context.Background(), constants.CacheWarmupTimeout)
+	defer cancel()
+	_ = cachex.WarmupAllKV(warmupCtx)
 <%- else %>
 
 	// TODO: 按需注册本服务的缓存
@@ -163,3 +234,36 @@ func (s *<% .ServiceName %>Gateway) registerKvCache() {
 
 	gwglobal.LOGGER.Info("Cache registered")
 }
+<%- if eq .GenerateExample "true" %>
+
+// load<% .MixedService %>IDByCode 全量构建 code → id 映射
+//
+// 只 Select 用到的两列，不要 SELECT *：这张表会被整表扫，多取的每一列都要
+// 过一遍网络和反序列化。字典表的行数不大，但列可能很宽（JSON 扩展字段之类）。
+//
+// 过滤掉空 code：空串做键没有意义，而且会和「查不到」混在一起分不清。
+//
+// [EN] Only the two columns in use are selected rather than everything, because the table is
+// scanned in full and each extra column pays network and decoding cost; a reference table has
+// few rows but can have wide ones. Empty codes are filtered out, since an empty key is
+// meaningless and would be indistinguishable from a miss.
+func load<% .MixedService %>IDByCode(ctx context.Context) (map[string]string, error) {
+	var rows []struct {
+		Id   string
+		Code string
+	}
+	if err := gwglobal.DB.WithContext(ctx).
+		Model(&models.<% .MixedService %>Model{}).
+		Select("id", "code").
+		Where("code <> ?", "").
+		Find(&rows).Error; err != nil {
+		return nil, err
+	}
+
+	out := make(map[string]string, len(rows))
+	for _, r := range rows {
+		out[r.Code] = r.Id
+	}
+	return out, nil
+}
+<%- end %>

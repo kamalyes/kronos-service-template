@@ -12,7 +12,9 @@
 package migrations
 
 import (
+<%- if eq .GenerateExample "true" %>
 	"github.com/<% .OrgName %>/<% .ProjectName %>/models"
+<%- end %>
 	"github.com/kamalyes/go-sqlbuilder/db"
 	"gorm.io/gorm"
 )

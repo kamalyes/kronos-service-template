@@ -228,10 +228,15 @@ questions:
     type: bool
     default: "true"
 
+  # 默认开：subscriber.go 里装的是下游同步 worker，也就是服务间 gRPC 调用的示例。
+  # 关掉的话那个 worker 不会生成，远程调用示例就只剩客户端装配、没有调用方。
+  # [EN] On by default: subscriber.go holds the downstream sync worker, which is the
+  # service-to-service gRPC example. With it off the worker is not emitted and the remote-call
+  # example is left with client assembly but no caller.
   - name: UseSubscriber
-    prompt: "是否启用事件订阅 | Enable the event subscriber"
+    prompt: "是否启用后台任务与事件订阅（含服务间调用示例）| Enable background tasks and subscriptions, including the service-to-service example"
     type: bool
-    default: "false"
+    default: "true"
 
   - name: GenerateExample
     prompt: "是否生成示例 Model / Repository / Service（否则只生成工程骨架）| Generate the example model, repository and service, or scaffolding only"
@@ -340,16 +345,20 @@ ignore:
   # [EN] Example entity: excluded as a group so nothing is left unreferenced
   - '<% if ne .GenerateExample "true" %>models/<% .ExampleService | snake %>_model.go<% end %>'
   - '<% if ne .GenerateExample "true" %>repository/<% .ExampleService | snake %>_repository.go<% end %>'
-  - '<% if ne .GenerateExample "true" %>service/<% .ExampleService | snake %>_service.go<% end %>'
+  - '<% if ne .GenerateExample "true" %>service/<% .ExampleModule %>/<% .ExampleService | snake %>_service.go<% end %>'
   - '<% if ne .GenerateExample "true" %>models/<% .SecondService | snake %>_model.go<% end %>'
   - '<% if ne .GenerateExample "true" %>repository/<% .SecondService | snake %>_repository.go<% end %>'
-  - '<% if ne .GenerateExample "true" %>service/<% .SecondService | snake %>_service.go<% end %>'
+  - '<% if ne .GenerateExample "true" %>service/<% .SecondModule %>/<% .SecondService | snake %>_service.go<% end %>'
   - '<% if ne .GenerateExample "true" %>models/<% .MixedService | snake %>_model.go<% end %>'
   - '<% if ne .GenerateExample "true" %>models/<% .MixedService | snake %>_member_model.go<% end %>'
   - '<% if ne .GenerateExample "true" %>repository/<% .MixedService | snake %>_repository.go<% end %>'
   - '<% if ne .GenerateExample "true" %>repository/<% .MixedService | snake %>_member_repository.go<% end %>'
-  - '<% if ne .GenerateExample "true" %>service/<% .MixedService | snake %>_service.go<% end %>'
-  - '<% if ne .GenerateExample "true" %>service/<% .MixedService | snake %>_member_service.go<% end %>'
+  - '<% if ne .GenerateExample "true" %>service/<% .MixedModule %>/<% .MixedService | snake %>_service.go<% end %>'
+  - '<% if ne .GenerateExample "true" %>service/<% .MixedModule %>/<% .MixedService | snake %>_member_service.go<% end %>'
+  # 下游同步 worker：示例关掉、或订阅关掉（没人启动它）时都不生成
+  # [EN] The downstream sync worker is not emitted when the example is off, nor when the
+  # subscriber is off, since nothing would start it
+  - '<% if or (ne .GenerateExample "true") (ne .UseSubscriber "true") %>service/<% .MixedModule %>/<% .MixedService | snake %>_sync_worker.go<% end %>'
   # 事件订阅：默认关，关掉则不生成
   # [EN] Event subscriber: off by default and not emitted when disabled
   - '<% if ne .UseSubscriber "true" %>bootstrap/subscriber.go<% end %>'

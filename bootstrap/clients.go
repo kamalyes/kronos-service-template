@@ -11,8 +11,10 @@
 package bootstrap
 
 import (
-	"github.com/<% .OrgName %>/<% .ProjectName %>/service/common"
 	gwglobal "github.com/kamalyes/go-rpc-gateway/global"
+<%- if eq .GenerateExample "true" %>
+	"github.com/<% .OrgName %>/<% .ProjectName %>/service/common"
+<%- end %>
 )
 
 // initClients 装配下游 gRPC 客户端
