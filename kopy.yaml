@@ -151,18 +151,30 @@ questions:
   - name: ShareProtoModule
     prompt: "协议中心 Go 模块路径 | Go module path of the contract hub"
     type: string
-    # 默认指向样板协议中心，让生成出来的服务开箱即能编译、能跑。
-    # 它由 kronos-share-proto-template 生成，带 catalog/Product、inventory/Warehouse、
-    # tenant/Tenant 三个示例模块，示例实现对接的就是其中的 catalog/Product。
-    # 接真实项目时改成自己的协议中心（按 kronos-share-proto-template 生成一份）。
-    # 同 openapi-ts-sdk-template 把 SwaggerUrl 默认指向公开 Petstore 的道理：
-    # 先让链路跑通，再换成自己的。
+    # 默认直接指向协议中心模板仓库的 build 分支，让生成出来的服务开箱即能编译、能跑。
     #
-    # [EN] Defaults to the sample contract hub so a freshly generated service compiles and
-    # runs out of the box. Point it at your own hub (generated from
-    # kronos-share-proto-template) for real projects — same rationale as
-    # openapi-ts-sdk-template defaulting SwaggerUrl to the public Petstore spec.
-    default: "github.com/kamalyes/kronos-service-template-proto"
+    # 为什么是 build 分支而不是另一个仓库：kronos-share-proto-template 的 master
+    # 全是 kopy 占位符（proto/__module__/ 之类），不是合法 Go，go get 拉不动。
+    # 它的 CI 会把自己按默认变量渲染一遍、跑完 protoc 生成、验证能编译，
+    # 然后把结果强推到 build 分支。于是同一个仓库同时是「模板」和「可消费的依赖」，
+    # 不必再维护一个单独的样板 hub 仓库，两边的模块划分也不会各自漂移。
+    #
+    # 模块划分与本模板的默认值一一对应：catalog/Product、inventory/Warehouse、
+    # tenant/Tenant（+ TenantMember），示例实现对接的就是其中的 catalog/Product。
+    #
+    # 接真实项目时改成自己的协议中心（按 kronos-share-proto-template 生成一份，
+    # 生成出来的仓库自己的 CI 会把 pb 提交回它的主干，那时版本填 latest 或具体 tag）。
+    #
+    # [EN] Points at the contract-hub template's build branch so a freshly generated service
+    # compiles and runs out of the box. Its master is all kopy placeholders and not valid Go, so
+    # go get cannot fetch it; its CI renders the template with the default variables, runs the
+    # protoc generation, verifies it builds and force-pushes the result to build. One repository
+    # is therefore both the template and a consumable dependency, with no separate sample hub to
+    # maintain and no chance of the two drifting apart in module layout. The modules line up
+    # one-to-one with this template's defaults. For a real project, point this at your own hub
+    # generated from the template, whose own CI commits pb back to its trunk, and pin latest or
+    # a tag as the version.
+    default: "github.com/kamalyes/kronos-share-proto-template"
     required: true
 
   - name: ShareProtoVersion
