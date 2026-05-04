@@ -12,11 +12,15 @@ package common
 <%- if eq .GenerateExample "true" %>
 
 import (
+	"context"
+
 	"github.com/<% .OrgName %>/<% .ProjectName %>/constants"
-	secondpb "<% .ShareProtoModule %>/pb/<% .SecondModule %>"
+	keypb "<% .ShareProtoModule %>/pb/key"
 	gwconfig "github.com/kamalyes/go-config/pkg/gateway"
 	grpcpool "github.com/kamalyes/go-rpc-gateway/cpool/grpc"
+	gwconstants "github.com/kamalyes/go-rpc-gateway/constants"
 	gwglobal "github.com/kamalyes/go-rpc-gateway/global"
+	"google.golang.org/grpc/metadata"
 )
 
 // Clients 本服务要调用的下游客户端集合
@@ -29,9 +33,9 @@ import (
 // service name and a repeat InitClient returns the same ClientConn) and the health state is
 // shared. One holder avoids doubling connections and keeping several health views.
 type Clients struct {
-	health      *grpcpool.HealthChecker
-	<% .SecondService %>Client secondpb.<% .SecondService %>ServiceClient
-	<% .SecondService %>Ready  bool
+	health         *grpcpool.HealthChecker
+	IdBlockClient  keypb.IdBlockServiceClient
+	IdBlockReady   bool
 }
 
 // clients 进程内单例，由 bootstrap 在启动阶段装配一次
@@ -79,11 +83,11 @@ func NewClients(gw GatewayConfigProvider) *Clients {
 	}
 	grpcClients := cfg.GRPC.Clients
 
-	c.<% .SecondService %>Ready = grpcpool.InitClientTo(
+	c.IdBlockReady = grpcpool.InitClientTo(
 		c.health, grpcClients,
-		constants.RemoteService<% .SecondService %>, "<% .SecondService %>",
-		secondpb.New<% .SecondService %>ServiceClient,
-		&c.<% .SecondService %>Client,
+		constants.RemoteServiceKey, "IdBlock",
+		keypb.NewIdBlockServiceClient,
+		&c.IdBlockClient,
 	)
 
 	// 周期性健康检查：拨号本身不等就绪（grpc.NewClient 是惰性的），
@@ -108,7 +112,7 @@ type GatewayConfigProvider interface {
 	GetConfig() *gwconfig.Gateway
 }
 
-// <% .SecondService %>Remote 取下游客户端，第二个返回值表示现在能不能用
+// IdBlockRemote 取中心发号服务的客户端，第二个返回值表示现在能不能用
 //
 // 两种「不能用」合并成一个 false：没配置（endpoints 为空）和配了但不健康。
 // 调用方对这两种的处置是一样的——跳过这次远程调用，走降级逻辑。
@@ -121,13 +125,40 @@ type GatewayConfigProvider interface {
 // way: skip the remote call and degrade. No error is returned on purpose, since an unavailable
 // downstream is usually not this request's failure, and an error would invite callers to
 // propagate it so that a downstream blip turns into a 500 upstream.
-func <% .SecondService %>Remote() (secondpb.<% .SecondService %>ServiceClient, bool) {
-	if !clients.<% .SecondService %>Ready || clients.<% .SecondService %>Client == nil {
+func IdBlockRemote() (keypb.IdBlockServiceClient, bool) {
+	if !clients.IdBlockReady || clients.IdBlockClient == nil {
 		return nil, false
 	}
-	if clients.health != nil && !clients.health.IsHealthy(constants.RemoteService<% .SecondService %>) {
+	if clients.health != nil && !clients.health.IsHealthy(constants.RemoteServiceKey) {
 		return nil, false
 	}
-	return clients.<% .SecondService %>Client, true
+	return clients.IdBlockClient, true
 }
 <%- end %>
+
+// WithServiceIdentity 给后台调用注入本服务自己的身份
+//
+// 后台任务（号段预取、同步 worker）的 ctx 不是从请求来的，里面没有
+// RequestCommonMeta，所以连接池的透传拦截器注入出去的租户、请求 ID 全是空的。
+// 下游若按租户隔离就会直接拒绝。
+//
+// 注入的是「本服务」而不是某个业务租户：基础设施资源（号段）不归任何一个
+// 业务租户。用请求里的租户去取，会让每个租户各占一个序列把号段切碎，
+// 而且第一个请求的租户会决定整个进程的序列归属。
+//
+// 用 AppendToOutgoingContext 而不是 NewOutgoingContext：后者整个替换出向
+// metadata，会把拦截器稍后注入的字段一起冲掉；前者是追加。
+//
+// [EN] A background context carries no request metadata, so the pool's interceptor propagates
+// an empty tenant and request id and a tenant-isolating downstream refuses. The service's own
+// identity is injected rather than a business tenant, because infrastructure resources belong
+// to none; drawing on the requesting tenant would fragment them per tenant and let the first
+// request decide the whole process's sequence. AppendToOutgoingContext is used because
+// NewOutgoingContext replaces the outgoing metadata wholesale and discards what the interceptor
+// adds later.
+func WithServiceIdentity(ctx context.Context) context.Context {
+	return metadata.AppendToOutgoingContext(ctx,
+		gwconstants.MetadataTenantID, constants.ServiceName,
+		gwconstants.MetadataRequestID, "svc-"+constants.ServiceName,
+	)
+}

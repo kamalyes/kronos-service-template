@@ -28,8 +28,15 @@ const ServiceName = "<% .ProjectName %>"
 // to "downstream not configured". Reference this constant on both sides rather than writing the
 // literal anywhere.
 const (
-	// RemoteService<% .SecondService %> 服务间调用 demo 的下游服务
-	// [EN] The downstream service used by the service-to-service demo
-	RemoteService<% .SecondService %> = "<% .DemoRemoteService %>"
+	// RemoteServiceKey 中心发号 / 发密钥服务
+	//
+	// 由 kronos-key-service-template 生成，实现协议中心 key 模块的
+	// IdBlockService（ID 号段）与 TempKeyService（临时 RSA 密钥）。
+	// 本服务目前只用到前者，见 bootstrap/idgen.go。
+	//
+	// [EN] Generated from kronos-key-service-template and implementing the contract hub's key
+	// module: IdBlockService for id blocks and TempKeyService for temporary RSA keys. Only the
+	// former is used here, in bootstrap/idgen.go.
+	RemoteServiceKey = "<% .DemoRemoteService %>"
 )
 <%- end %>

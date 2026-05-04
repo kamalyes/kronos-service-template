@@ -318,10 +318,22 @@ questions:
     default: Tenant
     required: true
 
+  # 下游服务名：默认指向 kronos-key-service-template 生成出来的那个服务。
+  #
+  # 这不是一个造出来的 demo：ID 号段分发（models/idsource.go）确实需要一个
+  # 中心发号者，而那正是 key-service 的 IdBlockService。本地 Snowflake 在
+  # Deployment 下会撞 worker id（32 个槽位，8 副本 61% 概率），所以这个依赖
+  # 是真实的，不是为了演示服务间调用而硬加的。
+  #
+  # [EN] Defaults to the service generated from kronos-key-service-template. This is not a
+  # contrived demo: id block allocation genuinely needs a central issuer, which is exactly that
+  # service's IdBlockService, because a local Snowflake collides on worker id under a Deployment
+  # — 32 slots means a 61% chance with eight replicas. The dependency is real rather than added
+  # to show off a service-to-service call.
   - name: DemoRemoteService
-    prompt: "服务间调用 demo 的下游服务名（对应 grpc.clients 的 key）| Downstream service name for the service-to-service demo"
+    prompt: "中心发号服务名（对应 grpc.clients 的 key）| Central id issuer service name"
     type: string
-    default: "<% .SecondModule %>-service"
+    default: "<% .ObjectPrefix %>-key-service"
     required: true
 
   - name: PipelineRepo
@@ -346,6 +358,15 @@ questions:
 # exactly what this template did before 2.0.0).
 # ============================================================================
 ignore:
+  # verify-template.yml 只服务于模板仓库自己（渲染自身并发布 build 分支），
+  # 生成出来的项目不需要它——那边没有 kopy.yaml，渲染步骤必然失败。
+  # 不排除的话每个生成仓库都会多一个永远红叉的工作流。
+  #
+  # [EN] verify-template.yml serves only the template repository, which renders itself and
+  # publishes the build branch. A generated project has no kopy.yaml, so its render step would
+  # always fail, and leaving it in gives every generated repository a permanently failing
+  # workflow.
+  - ".github/workflows/verify-template.yml"
   - "kopy.yaml"
   # 模板自身的说明文档：rename 后在此被忽略
   # [EN] The template's own documentation, renamed then ignored
