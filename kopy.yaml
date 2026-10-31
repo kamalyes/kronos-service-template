@@ -178,9 +178,31 @@ questions:
     required: true
 
   - name: ShareProtoVersion
-    prompt: "协议中心依赖版本（latest 则由 init 脚本解析最新 commit）| Contract-hub version, or latest to resolve the newest commit"
+    prompt: "协议中心依赖版本（分支名 / tag / latest）| Contract-hub version, a branch, a tag or latest"
     type: string
-    default: "latest"
+    # 默认必须是 build，不能是 latest。
+    #
+    # 上面 ShareProtoModule 指向的是协议中心**模板**仓库，它的 master 全是 kopy 占位符
+    # （go.mod 第一行就是 `module <% .ModuleName %>`），不是合法 Go；可编译的渲染产物
+    # 由它的 CI 强推到 build 分支
+    # 而 Go 的 @latest 只认最新 tag 或默认分支——这个仓库没有任何 tag，默认分支是 master，
+    # 所以 @latest 必然落到 master，然后在解析 go.mod 时报：
+    #     parsing go.mod: go.mod:1: usage: module module/path
+    # init.sh 捕获到 go get 失败后会打印「协议中心仓库还没创建」，于是真实原因被掩盖成
+    # 一条看起来无关的提示，verify 工作流因此长期失败
+    #
+    # 接自己的协议中心时（那种仓库的 CI 会把 pb 提交回主干）才填 latest 或具体 tag
+    #
+    # [EN] This must default to build, not latest. ShareProtoModule points at the contract
+    # hub's *template* repository, whose master is all kopy placeholders — its go.mod opens
+    # with `module <% .ModuleName %>` and is not valid Go — while the compilable rendered
+    # output is force-pushed to the build branch by its CI. Go's @latest only resolves the
+    # newest tag or the default branch, and this repository has no tags and defaults to
+    # master, so @latest always lands on master and then fails parsing its go.mod. init.sh
+    # catches the go get failure and prints "the contract hub has not been created yet",
+    # which hides the real cause behind an unrelated-looking hint. Use latest or a tag only
+    # when pointing at your own hub, whose CI commits pb back to its trunk
+    default: "build"
     required: true
 
   # --------------------------------------------------------------------------
@@ -334,6 +356,20 @@ questions:
     prompt: "中心发号服务名（对应 grpc.clients 的 key）| Central id issuer service name"
     type: string
     default: "<% .ObjectPrefix %>-key-service"
+    required: true
+
+  # 第二下游：混合模块的同步 worker 调用它，用来演示服务间 gRPC 调用。
+  # 它实现协议中心 <SecondModule> 模块的 <SecondService>Service，
+  # 本地没有这个下游时把 resources 里对应的 endpoints 留空即可，worker 会跳过。
+  #
+  # [EN] The second downstream, called by the mixed module's sync worker to demonstrate a
+  # service-to-service gRPC call. It implements the contract hub's <SecondService>Service in the
+  # <SecondModule> module; leave its endpoints empty in resources when no such downstream exists
+  # locally and the worker will skip it.
+  - name: DemoSecondRemoteService
+    prompt: "第二下游服务名（同步 worker 调用，对应 grpc.clients 的 key）| Second downstream service name"
+    type: string
+    default: "<% .ObjectPrefix %>-<% .SecondModule %>-service"
     required: true
 
   - name: PipelineRepo

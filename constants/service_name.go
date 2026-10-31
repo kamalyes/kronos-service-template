@@ -13,7 +13,6 @@ package constants
 
 // ServiceName 服务名称
 const ServiceName = "<% .ProjectName %>"
-<%- if eq .GenerateExample "true" %>
 
 // 远程服务名 | Remote service names
 //
@@ -38,5 +37,15 @@ const (
 	// module: IdBlockService for id blocks and TempKeyService for temporary RSA keys. Only the
 	// former is used here, in bootstrap/idgen.go.
 	RemoteServiceKey = "<% .DemoRemoteService %>"
+
+	// SecondRemoteServiceKey 第二下游，实现协议中心 <% .SecondModule %> 模块的
+	// <% .SecondService %>Service
+	//
+	// 由混合模块的同步 worker 调用，用来演示服务间 gRPC 调用，
+	// 见 service/<% .MixedModule %>/<% .MixedService | snake %>_sync_worker.go
+	//
+	// [EN] The second downstream implementing the contract hub's <% .SecondService %>Service in
+	// the <% .SecondModule %> module, called by the mixed module's sync worker as a
+	// service-to-service example
+	SecondRemoteServiceKey = "<% .DemoSecondRemoteService %>"
 )
-<%- end %>

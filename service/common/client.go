@@ -9,13 +9,43 @@
  * Copyright (c) <% .Year %> by <% .AuthorName %>, All Rights Reserved.
  */
 package common
-<%- if eq .GenerateExample "true" %>
 
+// 本文件整体不受 GenerateExample 门控
+//
+// 原先 Clients 连同 import 一起被圈进 `if eq .GenerateExample "true"`，
+// 但 bootstrap/idgen.go 是无条件生成的，而它要用 IdBlockRemote 与
+// constants.RemoteServiceKey——于是 GenerateExample=false 时渲染出的项目
+// 直接报 "undefined: common.IdBlockRemote"
+//
+// 为什么是去掉门而不是把 idgen.go 也关掉：中心发号是正确性设施而非示例。
+// 本地 Snowflake 的 worker id 只有 32 个槽位且由 hostname 哈希得出，
+// 16 副本时碰撞概率约 99%，表现为偶发主键冲突（详见 bootstrap/idgen.go 开头）。
+// 把它随示例一起删掉，等于让骨架项目默默退回这条有缺陷的路径
+//
+// 保留门控的是「装配」而不是「声明」：bootstrap/clients.go 在
+// GenerateExample=false 时不调用 SetClients，于是单例停在零值，
+// IdBlockRemote 返回 false，idgen 打一行「下游不可用」后跳过——
+// 骨架项目因此拿到的是一条看得见的降级提示，而不是一个被悄悄删掉的能力
+//
+// [EN] This file is intentionally not gated on GenerateExample. Clients used to sit inside
+// `if eq .GenerateExample "true"` together with the imports, but bootstrap/idgen.go is
+// generated unconditionally and needs IdBlockRemote and constants.RemoteServiceKey, so
+// GenerateExample=false produced "undefined: common.IdBlockRemote". The gate is removed rather
+// than also dropping idgen.go because central id dispensing is a correctness facility, not a
+// sample: a local Snowflake worker id has 32 slots derived from a hostname hash and collides
+// with about 99% probability at sixteen replicas, surfacing as intermittent primary-key
+// conflicts. What stays gated is the assembly rather than the declaration: clients.go does not
+// call SetClients when GenerateExample is false, so the singleton stays zero-valued,
+// IdBlockRemote reports false and idgen logs an unavailable downstream and skips. A skeleton
+// project therefore gets a visible degradation notice instead of a silently deleted capability.
 import (
 	"context"
 
 	"github.com/<% .OrgName %>/<% .ProjectName %>/constants"
 	keypb "<% .ShareProtoModule %>/pb/key"
+<%- if eq .GenerateExample "true" %>
+	secondpb "<% .ShareProtoModule %>/pb/<% .SecondModule %>"
+<%- end %>
 	gwconfig "github.com/kamalyes/go-config/pkg/gateway"
 	grpcpool "github.com/kamalyes/go-rpc-gateway/cpool/grpc"
 	gwconstants "github.com/kamalyes/go-rpc-gateway/constants"
@@ -36,6 +66,13 @@ type Clients struct {
 	health         *grpcpool.HealthChecker
 	IdBlockClient  keypb.IdBlockServiceClient
 	IdBlockReady   bool
+<%- if eq .GenerateExample "true" %>
+
+	// 第二下游：混合模块的同步 worker 用它做服务间调用示例
+	// [EN] The second downstream, used by the mixed module's sync worker
+	<% .SecondService %>Client secondpb.<% .SecondService %>ServiceClient
+	<% .SecondService %>Ready  bool
+<%- end %>
 }
 
 // clients 进程内单例，由 bootstrap 在启动阶段装配一次
@@ -89,6 +126,15 @@ func NewClients(gw GatewayConfigProvider) *Clients {
 		keypb.NewIdBlockServiceClient,
 		&c.IdBlockClient,
 	)
+<%- if eq .GenerateExample "true" %>
+
+	c.<% .SecondService %>Ready = grpcpool.InitClientTo(
+		c.health, grpcClients,
+		constants.SecondRemoteServiceKey, "<% .SecondService %>",
+		secondpb.New<% .SecondService %>ServiceClient,
+		&c.<% .SecondService %>Client,
+	)
+<%- end %>
 
 	// 周期性健康检查：拨号本身不等就绪（grpc.NewClient 是惰性的），
 	// 所以「连接建好了」不等于「下游活着」。健康检查把这件事变成可查询的状态，
@@ -133,6 +179,25 @@ func IdBlockRemote() (keypb.IdBlockServiceClient, bool) {
 		return nil, false
 	}
 	return clients.IdBlockClient, true
+}
+<%- if eq .GenerateExample "true" %>
+
+// <% .SecondService %>Remote 取第二下游的客户端，语义与 IdBlockRemote 完全一致
+//
+// 未配置与不健康都归为 false，调用方一律跳过本次远程调用；这里同样不返回 error
+// 理由见上面 IdBlockRemote 的说明
+//
+// [EN] The second downstream's client, with exactly the same semantics as IdBlockRemote:
+// unconfigured and unhealthy both collapse to false so callers skip the call, and no error is
+// returned, for the reasons given on IdBlockRemote above
+func <% .SecondService %>Remote() (secondpb.<% .SecondService %>ServiceClient, bool) {
+	if !clients.<% .SecondService %>Ready || clients.<% .SecondService %>Client == nil {
+		return nil, false
+	}
+	if clients.health != nil && !clients.health.IsHealthy(constants.SecondRemoteServiceKey) {
+		return nil, false
+	}
+	return clients.<% .SecondService %>Client, true
 }
 <%- end %>
 
