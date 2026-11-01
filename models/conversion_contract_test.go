@@ -1,8 +1,8 @@
 /*
  * @Author: <% .AuthorName %> <% .AuthorEmail %>
- * @Date: <% nowFmt "2006-01-02" %> 00:00:00
+ * @Date: <% nowFmt "2006-01-02" %> 18:10:33
  * @LastEditors: <% .AuthorName %> <% .AuthorEmail %>
- * @LastEditTime: <% nowFmt "2006-01-02" %> 00:00:00
+ * @LastEditTime: <% nowFmt "2006-01-02" %> 19:30:27
  * @FilePath: \<% .ProjectName %>\models\conversion_contract_test.go
  * @Description: Model-PB 转换契约测试，守住字段映射不随协议演进而断裂
  *

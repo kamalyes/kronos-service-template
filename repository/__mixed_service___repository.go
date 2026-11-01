@@ -1,8 +1,8 @@
 /*
  * @Author: <% .AuthorName %> <% .AuthorEmail %>
- * @Date: <% nowFmt "2006-01-02" %> 00:00:00
+ * @Date: <% nowFmt "2006-01-02" %> 17:05:08
  * @LastEditors: <% .AuthorName %> <% .AuthorEmail %>
- * @LastEditTime: <% nowFmt "2006-01-02" %> 00:00:00
+ * @LastEditTime: <% nowFmt "2006-01-02" %> 19:28:30
  * @FilePath: \<% .ProjectName %>\repository\<% .MixedService | snake %>_repository.go
  * @Description: <% .MixedService %> 聚合根与子资源的数据访问层
  *

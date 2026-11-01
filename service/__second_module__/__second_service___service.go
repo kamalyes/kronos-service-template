@@ -1,8 +1,8 @@
 /*
  * @Author: <% .AuthorName %> <% .AuthorEmail %>
- * @Date: <% nowFmt "2006-01-02" %> 00:00:00
+ * @Date: <% nowFmt "2006-01-02" %> 17:05:08
  * @LastEditors: <% .AuthorName %> <% .AuthorEmail %>
- * @LastEditTime: <% nowFmt "2006-01-02" %> 00:00:00
+ * @LastEditTime: <% nowFmt "2006-01-02" %> 19:28:30
  * @FilePath: \<% .ProjectName %>\service\<% .SecondModule %>\<% .SecondService | snake %>_service.go
  * @Description: <% .SecondService %> 业务逻辑层，实现协议中心的 <% .SecondService %>ServiceServer
  *
@@ -14,6 +14,7 @@ package <% .SecondModule %>
 import (
 	"context"
 
+	"github.com/<% .OrgName %>/<% .ProjectName %>/errcodes"
 	"github.com/<% .OrgName %>/<% .ProjectName %>/models"
 	"github.com/<% .OrgName %>/<% .ProjectName %>/service/common"
 	"github.com/<% .OrgName %>/<% .ProjectName %>/repository"
@@ -62,7 +63,7 @@ func (s *<% .SecondService %>Service) <% .SecondService %>Create(
 		return nil, common.DBError(ctx)
 	}
 	if exists {
-		return nil, bizerror.ToGRPCErrorWithTemplate(ctx, bizerror.BizErrCodeConflict,
+		return nil, bizerror.ToGRPCErrorWithTemplate(ctx, errcodes.BizErrCode<% .SecondService | pascal %>AlreadyExists,
 			map[string]any{"reason": req.GetCode()})
 	}
 
@@ -107,7 +108,7 @@ func (s *<% .SecondService %>Service) <% .SecondService %>Get(
 		return nil, common.DBError(ctx)
 	}
 	if model == nil {
-		return nil, common.NotFound(ctx)
+		return nil, bizerror.ToGRPCError(ctx, errcodes.BizErrCode<% .SecondService | pascal %>NotFound)
 	}
 
 	info, err := model.ToPB(ctx)
@@ -181,7 +182,7 @@ func (s *<% .SecondService %>Service) <% .SecondService %>Update(
 		return nil, common.DBError(ctx)
 	}
 	if fresh == nil {
-		return nil, common.NotFound(ctx)
+		return nil, bizerror.ToGRPCError(ctx, errcodes.BizErrCode<% .SecondService | pascal %>NotFound)
 	}
 	common.RefreshKV(ctx, fresh)
 
@@ -202,8 +203,8 @@ func (s *<% .SecondService %>Service) <% .SecondService %>UpdateStatus(
 	}
 
 	if req.GetStatus() == enumspb.CommonStatus_COMMON_STATUS_UNSPECIFIED {
-		return nil, bizerror.ToGRPCErrorWithTemplate(ctx, bizerror.BizErrCodeInvalidParameter,
-			map[string]any{"reason": "status"})
+		return nil, bizerror.ToGRPCErrorWithTemplate(ctx, errcodes.BizErrCode<% .SecondService | pascal %>InvalidStatus,
+			map[string]any{"reason": req.GetStatus().String()})
 	}
 
 	id := req.Get<% .SecondService %>Id()

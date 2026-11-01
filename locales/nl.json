@@ -2,5 +2,26 @@
   "welcome": "Welkom",
   "success": "Succes",
   "hello": "Hallo",
-  "goodbye": "Tot ziens"
+  "goodbye": "Tot ziens"<% if eq .GenerateExample "true" %>,
+  "error": {
+    "<% .ExampleService | snake %>_not_found": "<% .ExampleService %> niet gevonden",
+    "<% .ExampleService | snake %>_already_exists": "<% .ExampleService %> bestaat al: {{reason}}",
+    "<% .ExampleService | snake %>_invalid_status": "Ongeldige <% .ExampleService %>-status: {{reason}}",
+    "<% .SecondService | snake %>_not_found": "<% .SecondService %> niet gevonden",
+    "<% .SecondService | snake %>_already_exists": "<% .SecondService %> bestaat al: {{reason}}",
+    "<% .SecondService | snake %>_invalid_status": "Ongeldige <% .SecondService %>-status: {{reason}}",
+    "<% .MixedService | snake %>_not_found": "<% .MixedService %> niet gevonden",
+    "<% .MixedService | snake %>_already_exists": "<% .MixedService %> bestaat al: {{reason}}",
+    "<% .MixedService | snake %>_invalid_status": "De huidige status van <% .MixedService %> staat deze bewerking niet toe: {{reason}}",
+    "<% .MixedService | snake %>_region_assignment_not_found": "Regiotoewijzing van <% .MixedService %> niet gevonden",
+    "<% .MixedService | snake %>_member_not_found": "Lid van <% .MixedService %> niet gevonden",
+    "<% .MixedService | snake %>_member_already_exists": "Lid van <% .MixedService %> bestaat al: {{reason}}",
+    "<% .MixedService | snake %>_member_invalid_role": "Ongeldige ledenrol van <% .MixedService %>: {{reason}}"
+  },
+  "<% .MixedService | snake %>": {
+    "sync": {
+      "already_synced": "Al gesynchroniseerd, opnieuw starten is niet nodig",
+      "triggered": "Downstream-synchronisatie gestart"
+    }
+  }<% end %>
 }

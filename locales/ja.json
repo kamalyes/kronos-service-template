@@ -2,5 +2,26 @@
   "welcome": "ようこそ",
   "success": "成功",
   "hello": "こんにちは",
-  "goodbye": "さようなら"
+  "goodbye": "さようなら"<% if eq .GenerateExample "true" %>,
+  "error": {
+    "<% .ExampleService | snake %>_not_found": "<% .ExampleService %> が見つかりません",
+    "<% .ExampleService | snake %>_already_exists": "<% .ExampleService %> は既に存在します：{{reason}}",
+    "<% .ExampleService | snake %>_invalid_status": "<% .ExampleService %> のステータスが不正です：{{reason}}",
+    "<% .SecondService | snake %>_not_found": "<% .SecondService %> が見つかりません",
+    "<% .SecondService | snake %>_already_exists": "<% .SecondService %> は既に存在します：{{reason}}",
+    "<% .SecondService | snake %>_invalid_status": "<% .SecondService %> のステータスが不正です：{{reason}}",
+    "<% .MixedService | snake %>_not_found": "<% .MixedService %> が見つかりません",
+    "<% .MixedService | snake %>_already_exists": "<% .MixedService %> は既に存在します：{{reason}}",
+    "<% .MixedService | snake %>_invalid_status": "<% .MixedService %> の現在のステータスではこの操作を実行できません：{{reason}}",
+    "<% .MixedService | snake %>_region_assignment_not_found": "<% .MixedService %> の地域割り当てが見つかりません",
+    "<% .MixedService | snake %>_member_not_found": "<% .MixedService %> のメンバーが見つかりません",
+    "<% .MixedService | snake %>_member_already_exists": "<% .MixedService %> のメンバーは既に存在します：{{reason}}",
+    "<% .MixedService | snake %>_member_invalid_role": "<% .MixedService %> のメンバーロールが不正です：{{reason}}"
+  },
+  "<% .MixedService | snake %>": {
+    "sync": {
+      "already_synced": "既に同期済みのため、再実行は不要です",
+      "triggered": "下流への同期を開始しました"
+    }
+  }<% end %>
 }

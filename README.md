@@ -6,7 +6,7 @@
 
 - **gRPC & HTTP 双协议**：同时支持 gRPC 高性能通信和 RESTful HTTP/JSON 接口
 - **自动化数据库迁移**：基于 go-sqlbuilder Migrator，支持自动建表、索引和表注释
-- **国际化错误处理**：内置 i18n 错误系统，支持 27 种语言的错误消息
+- **国际化错误处理**：go-bizerror 的通用码 + `errcodes/` 的实体专属码，28 种语言的错误消息
 - **仓库工厂模式**：统一管理数据访问层，支持泛型 BaseRepository
 - **PBMO 模型转换**：Proto ↔ Model 双向自动转换
 - **Snowflake ID 生成**：内置分布式短 ID 生成器
@@ -20,6 +20,7 @@
 ├── .vscode/                    # VS Code 配置
 ├── bootstrap/                  # 启动引导
 │   ├── database.go             # 数据库初始化与迁移
+│   ├── errcodes.go             # 业务错误码状态映射注册（Run() 的第一步）
 │   ├── server.go               # gRPC/HTTP 服务启动与生命周期
 │   ├── services.go             # 服务注册（gRPC + HTTP Handler）
 │   └── subscriber.go           # 事件订阅（可选）
@@ -27,10 +28,10 @@
 │   └── service_name.go         # 服务名称常量
 ├── docs/                       # 文档目录
 ├── __ai_home__/                # AI 规范，渲染时改名成 .trae / .claude / .cursor / .vscode
-│   ├── codes.go                # 业务错误码常量
-│   ├── errors.go               # i18n 错误构造函数
-│   └── grpc.go                 # gRPC 错误码映射
-├── locales/                    # 国际化文件（27 种语言）
+│   └── skills/                 # 开发指南 skill
+├── errcodes/                   # 本服务专属业务错误码
+│   └── codes.go                # 码常量 + Mappings() 状态码映射表
+├── locales/                    # 国际化文件（28 种语言）
 │   ├── zh.json                 # 中文
 │   ├── en.json                 # 英文
 │   └── ...                     # 其他语言
@@ -259,13 +260,58 @@ var TableNameXxx = XxxModel{}.TableName()
 
 在 `GetAllModels()`、`GetAllIndexes()`、`GetAllComments()` 中添加新实体。
 
-### 8. 错误码 (`errors/codes.go`)
+### 8. 错误码 (`errcodes/codes.go`)
 
-添加实体相关的业务错误码。
+两件事要一起做，缺任一件都会出问题
+
+**一、声明常量**码值本身就是 i18n key，形如 `error.<实体>_<语义>`，常量名对齐 go-bizerror 的
+`BizErrCode<实体><语义>`
+
+```go
+BizErrCodeXxxNotFound      = "error.xxx_not_found"
+BizErrCodeXxxAlreadyExists = "error.xxx_already_exists"
+BizErrCodeXxxInvalidStatus = "error.xxx_invalid_status"
+```
+
+**二、在 `Mappings()` 里登记映射**
+
+```go
+BizErrCodeXxxNotFound:      {GRPC: codes.NotFound, Gateway: gwerrors.ErrCodeNotFound},
+BizErrCodeXxxAlreadyExists: {GRPC: codes.AlreadyExists, Gateway: gwerrors.ErrCodeConflict},
+BizErrCodeXxxInvalidStatus: {GRPC: codes.InvalidArgument, Gateway: gwerrors.ErrCodeBadRequest},
+```
+
+go-bizerror 的 `Mapping()` 只认三件事：显式注册过的映射、以 `_not_found` 结尾的码（自动映射成
+`NotFound`）、**其余一律兜底 `Internal`**所以只声明常量不登记映射的话，
+`error.xxx_already_exists` 这种码会以 500 返回，而 500 让调用方以为是服务挂了、于是去重试一个
+永远不会成功的请求
+
+写复合字面量时带上字段名（`GRPC:` / `Gateway:`）：`go vet` 的 composites 检查会拦跨包类型的
+无字段名字面量，而 CI 里 `go vet ./...` 是独立一步
+
+注册本身不用改任何代码：`bootstrap/errcodes.go` 的 `registerErrorCodes()` 在 `Run()` 的最前面
+调一次 `bizerror.RegisterMany(errcodes.Mappings())`，新增的码自动生效
 
 ### 9. 国际化 (`locales/*.json`)
 
-在所有语言文件中添加错误码的翻译。
+新错误码的 key 必须在**全部 28 个**语言文件里都存在，且各文件的键集合完全相等——缺键会让该语言
+在这个 key 上回退到别处
+
+key 放在 `error` 对象下，**不带** `error.` 前缀：go-i18n 加载时按点号把嵌套结构拍平，
+`error` + `xxx_not_found` 合起来就是码值 `error.xxx_not_found`
+
+```json
+"error": {
+  "xxx_not_found": "Xxx 不存在",
+  "xxx_already_exists": "Xxx 已存在：{{reason}}"
+}
+```
+
+模板变量用双花括号 `{{reason}}`，对应 `ToGRPCErrorWithTemplate(ctx, code, map[string]any{"reason": ...})`
+注意带占位符的文案必须经过带模板的取值函数：`GetMsgByKey` 不套模板，会把字面量 `{{reason}}`
+原样交给调用方，批量接口逐条返回文案时要用 `GetMsgWithMap`
+
+其余约定（28 个语言文件清单、命名、翻译注意事项）见 `locales/CONVENTIONS.md`
 
 ### 10. gRPC/HTTP 注册 (`bootstrap/services.go`)
 
@@ -274,7 +320,10 @@ var TableNameXxx = XxxModel{}.TableName()
 ## ⚠️ 重要注意事项
 
 - 模型字段名必须与 Proto 字段名一致，以支持 PBMO 自动转换
-- 使用 `errors.ToGRPCError()` 返回错误，不要直接使用 `status.Errorf()`
+- 用 `bizerror.ToGRPCError()` / `ToGRPCErrorWithTemplate()` 返回错误，不要直接用 `status.Errorf()`
+- 实体专属语义（某个实体不存在、某个字段唯一性冲突）用 `errcodes` 里的码，只有确实与实体无关的
+  才用 go-bizerror 的内置通用码（如 `BizErrCodeDatabaseOperationFailed`）——通用码只能回答
+  「冲突了」，回答不了「哪个实体的哪个字段冲突了」，而调用方正是靠后者决定下一步怎么做
 - 使用 `service.NewSnowflakeID()` 生成实体 ID
 - i18n 多语言字段使用 `models.LocalizedTextList` 类型
 - `go.mod` 中的 `replace` 指令默认指向同级目录的 share-proto 项目

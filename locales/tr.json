@@ -2,5 +2,26 @@
   "welcome": "Hoş geldiniz",
   "success": "Başarılı",
   "hello": "Merhaba",
-  "goodbye": "Hoşça kalın"
+  "goodbye": "Hoşça kalın"<% if eq .GenerateExample "true" %>,
+  "error": {
+    "<% .ExampleService | snake %>_not_found": "<% .ExampleService %> bulunamadı",
+    "<% .ExampleService | snake %>_already_exists": "<% .ExampleService %> zaten mevcut: {{reason}}",
+    "<% .ExampleService | snake %>_invalid_status": "Geçersiz <% .ExampleService %> durumu: {{reason}}",
+    "<% .SecondService | snake %>_not_found": "<% .SecondService %> bulunamadı",
+    "<% .SecondService | snake %>_already_exists": "<% .SecondService %> zaten mevcut: {{reason}}",
+    "<% .SecondService | snake %>_invalid_status": "Geçersiz <% .SecondService %> durumu: {{reason}}",
+    "<% .MixedService | snake %>_not_found": "<% .MixedService %> bulunamadı",
+    "<% .MixedService | snake %>_already_exists": "<% .MixedService %> zaten mevcut: {{reason}}",
+    "<% .MixedService | snake %>_invalid_status": "<% .MixedService %> öğesinin mevcut durumu bu işleme izin vermiyor: {{reason}}",
+    "<% .MixedService | snake %>_region_assignment_not_found": "<% .MixedService %> bölge ataması bulunamadı",
+    "<% .MixedService | snake %>_member_not_found": "<% .MixedService %> üyesi bulunamadı",
+    "<% .MixedService | snake %>_member_already_exists": "<% .MixedService %> üyesi zaten mevcut: {{reason}}",
+    "<% .MixedService | snake %>_member_invalid_role": "Geçersiz <% .MixedService %> üye rolü: {{reason}}"
+  },
+  "<% .MixedService | snake %>": {
+    "sync": {
+      "already_synced": "Zaten eşitlendi, yeniden tetiklemek gerekmiyor",
+      "triggered": "Alt sistem eşitlemesi tetiklendi"
+    }
+  }<% end %>
 }

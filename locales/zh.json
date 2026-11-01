@@ -2,5 +2,26 @@
   "welcome": "欢迎",
   "success": "成功",
   "hello": "你好",
-  "goodbye": "再见"
+  "goodbye": "再见"<% if eq .GenerateExample "true" %>,
+  "error": {
+    "<% .ExampleService | snake %>_not_found": "<% .ExampleService %> 不存在",
+    "<% .ExampleService | snake %>_already_exists": "<% .ExampleService %> 已存在：{{reason}}",
+    "<% .ExampleService | snake %>_invalid_status": "<% .ExampleService %> 状态无效：{{reason}}",
+    "<% .SecondService | snake %>_not_found": "<% .SecondService %> 不存在",
+    "<% .SecondService | snake %>_already_exists": "<% .SecondService %> 已存在：{{reason}}",
+    "<% .SecondService | snake %>_invalid_status": "<% .SecondService %> 状态无效：{{reason}}",
+    "<% .MixedService | snake %>_not_found": "<% .MixedService %> 不存在",
+    "<% .MixedService | snake %>_already_exists": "<% .MixedService %> 已存在：{{reason}}",
+    "<% .MixedService | snake %>_invalid_status": "<% .MixedService %> 当前状态不允许该操作：{{reason}}",
+    "<% .MixedService | snake %>_region_assignment_not_found": "<% .MixedService %> 地区分配不存在",
+    "<% .MixedService | snake %>_member_not_found": "<% .MixedService %> 成员不存在",
+    "<% .MixedService | snake %>_member_already_exists": "<% .MixedService %> 成员已存在：{{reason}}",
+    "<% .MixedService | snake %>_member_invalid_role": "<% .MixedService %> 成员角色无效：{{reason}}"
+  },
+  "<% .MixedService | snake %>": {
+    "sync": {
+      "already_synced": "已同步，无需重复触发",
+      "triggered": "已触发下游同步"
+    }
+  }<% end %>
 }

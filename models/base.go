@@ -1,8 +1,8 @@
 /*
  * @Author: <% .AuthorName %> <% .AuthorEmail %>
- * @Date: <% nowFmt "2006-01-02" %> 00:00:00
+ * @Date: <% nowFmt "2006-01-02" %> 17:05:08
  * @LastEditors: kamalyes 501893067@qq.com
- * @LastEditTime: <% nowFmt "2006-01-02" %> 00:00:00
+ * @LastEditTime: <% nowFmt "2006-01-02" %> 19:28:30
  * @FilePath: \<% .ProjectName %>\models\base.go
  * @Description: 模型基础类型定义，提供通用数据类型和工具方法
  *

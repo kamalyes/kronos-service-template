@@ -2,5 +2,26 @@
   "welcome": "स्वागत है",
   "success": "सफलता",
   "hello": "नमस्ते",
-  "goodbye": "अलविदा"
+  "goodbye": "अलविदा"<% if eq .GenerateExample "true" %>,
+  "error": {
+    "<% .ExampleService | snake %>_not_found": "<% .ExampleService %> नहीं मिला",
+    "<% .ExampleService | snake %>_already_exists": "<% .ExampleService %> पहले से मौजूद है: {{reason}}",
+    "<% .ExampleService | snake %>_invalid_status": "<% .ExampleService %> की स्थिति अमान्य है: {{reason}}",
+    "<% .SecondService | snake %>_not_found": "<% .SecondService %> नहीं मिला",
+    "<% .SecondService | snake %>_already_exists": "<% .SecondService %> पहले से मौजूद है: {{reason}}",
+    "<% .SecondService | snake %>_invalid_status": "<% .SecondService %> की स्थिति अमान्य है: {{reason}}",
+    "<% .MixedService | snake %>_not_found": "<% .MixedService %> नहीं मिला",
+    "<% .MixedService | snake %>_already_exists": "<% .MixedService %> पहले से मौजूद है: {{reason}}",
+    "<% .MixedService | snake %>_invalid_status": "<% .MixedService %> की वर्तमान स्थिति इस कार्य की अनुमति नहीं देती: {{reason}}",
+    "<% .MixedService | snake %>_region_assignment_not_found": "<% .MixedService %> क्षेत्र असाइनमेंट नहीं मिला",
+    "<% .MixedService | snake %>_member_not_found": "<% .MixedService %> सदस्य नहीं मिला",
+    "<% .MixedService | snake %>_member_already_exists": "<% .MixedService %> सदस्य पहले से मौजूद है: {{reason}}",
+    "<% .MixedService | snake %>_member_invalid_role": "<% .MixedService %> सदस्य की भूमिका अमान्य है: {{reason}}"
+  },
+  "<% .MixedService | snake %>": {
+    "sync": {
+      "already_synced": "पहले से सिंक हो चुका है, दोबारा चलाने की आवश्यकता नहीं",
+      "triggered": "डाउनस्ट्रीम सिंक शुरू किया गया"
+    }
+  }<% end %>
 }

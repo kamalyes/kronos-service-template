@@ -410,6 +410,24 @@ ignore:
   - ".git/"
   - ".git/**"
   - ".DS_Store"
+  # 实体专属错误码刻意**不**在这里排除：errcodes/codes.go 与 bootstrap/errcodes.go 两个文件
+  # 始终生成，示例的码与映射用 <% if eq .GenerateExample "true" %> 包在文件内部
+  #
+  # 理由：关掉示例时这个包仍然要存在——bootstrap 里那一次 RegisterMany 是启动流程的一环，
+  # 排除了包就要同时改 server.go 的调用，于是一个开关要同时对上三处（ignore、包、调用方），
+  # 正是本文件上面警告过的那种「两处不一致」的放大版
+  # 放在文件内部用条件块，关掉示例时 Mappings() 返回空 map，RegisterMany 是空操作，
+  # 骨架里留下的是一个带 TODO 的落位点而不是断引用
+  #
+  # [EN] The entity error codes are deliberately NOT excluded here: errcodes/codes.go and
+  # bootstrap/errcodes.go are always emitted and the example's codes and mappings are wrapped in
+  # a conditional inside the files. The package has to exist with the example off, because the
+  # single RegisterMany call is part of the startup sequence; excluding the package would mean
+  # also editing server.go, so one toggle would have to agree in three places instead of two —
+  # the amplified form of the mismatch warned about above. With the conditional inside the file,
+  # Mappings() returns an empty map, RegisterMany is a no-op, and the scaffold keeps a TODO
+  # landing spot rather than a dangling reference.
+
   # 示例实体：关掉就整组不生成，避免留下没人引用的孤立文件
   # [EN] Example entity: excluded as a group so nothing is left unreferenced
   - '<% if ne .GenerateExample "true" %>models/<% .ExampleService | snake %>_model.go<% end %>'

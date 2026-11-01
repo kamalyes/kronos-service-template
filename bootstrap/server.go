@@ -1,8 +1,8 @@
 /*
  * @Author: <% .AuthorName %> <% .AuthorEmail %>
- * @Date: <% nowFmt "2006-01-02" %> 00:00:00
+ * @Date: <% nowFmt "2006-01-02" %> 17:05:08
  * @LastEditors: kamalyes 501893067@qq.com
- * @LastEditTime: <% nowFmt "2006-01-02" %> 00:00:00
+ * @LastEditTime: <% nowFmt "2006-01-02" %> 19:28:30
  * @FilePath: \<% .ProjectName %>\bootstrap\server.go
  * @Description: 服务启动引导，初始化并启动gRPC和HTTP网关服务
  *
@@ -71,6 +71,15 @@ func (s *<% .ServiceName %>Gateway) Run() error {
 		return fmt.Errorf("create gateway failed: %v", err)
 	}
 	s.gateway = gw
+
+	// 错误码映射第一件事就注册：它是一张纯静态表，不依赖后面任何一个阶段，
+	// 而排在后面则意味着在它之前出错的阶段只能拿到兜底的 500
+	// 为什么不写成 errcodes 包的 init()，见 bootstrap/errcodes.go
+	// [EN] Registered first: a static table depending on none of the later stages, which
+	// would otherwise only get the 500 fallback if they failed. errcodes.go explains why
+	// this is not an init() in the errcodes package
+	gwglobal.LOGGER.Info("Registering business error codes...")
+	registerErrorCodes()
 
 	gwglobal.LOGGER.Info("Initializing database...")
 	if err := s.initDatabase(); err != nil {

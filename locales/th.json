@@ -2,5 +2,26 @@
   "welcome": "ยินดีต้อนรับ",
   "success": "สำเร็จ",
   "hello": "สวัสดี",
-  "goodbye": "ลาก่อน"
+  "goodbye": "ลาก่อน"<% if eq .GenerateExample "true" %>,
+  "error": {
+    "<% .ExampleService | snake %>_not_found": "ไม่พบ <% .ExampleService %>",
+    "<% .ExampleService | snake %>_already_exists": "<% .ExampleService %> มีอยู่แล้ว: {{reason}}",
+    "<% .ExampleService | snake %>_invalid_status": "สถานะของ <% .ExampleService %> ไม่ถูกต้อง: {{reason}}",
+    "<% .SecondService | snake %>_not_found": "ไม่พบ <% .SecondService %>",
+    "<% .SecondService | snake %>_already_exists": "<% .SecondService %> มีอยู่แล้ว: {{reason}}",
+    "<% .SecondService | snake %>_invalid_status": "สถานะของ <% .SecondService %> ไม่ถูกต้อง: {{reason}}",
+    "<% .MixedService | snake %>_not_found": "ไม่พบ <% .MixedService %>",
+    "<% .MixedService | snake %>_already_exists": "<% .MixedService %> มีอยู่แล้ว: {{reason}}",
+    "<% .MixedService | snake %>_invalid_status": "สถานะปัจจุบันของ <% .MixedService %> ไม่อนุญาตให้ดำเนินการนี้: {{reason}}",
+    "<% .MixedService | snake %>_region_assignment_not_found": "ไม่พบการกำหนดภูมิภาคของ <% .MixedService %>",
+    "<% .MixedService | snake %>_member_not_found": "ไม่พบสมาชิกของ <% .MixedService %>",
+    "<% .MixedService | snake %>_member_already_exists": "สมาชิกของ <% .MixedService %> มีอยู่แล้ว: {{reason}}",
+    "<% .MixedService | snake %>_member_invalid_role": "บทบาทสมาชิกของ <% .MixedService %> ไม่ถูกต้อง: {{reason}}"
+  },
+  "<% .MixedService | snake %>": {
+    "sync": {
+      "already_synced": "ซิงค์แล้ว ไม่จำเป็นต้องเรียกใช้อีก",
+      "triggered": "เริ่มการซิงค์ไปยังระบบปลายทางแล้ว"
+    }
+  }<% end %>
 }

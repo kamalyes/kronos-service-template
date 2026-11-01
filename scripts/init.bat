@@ -2,7 +2,7 @@
 setlocal enabledelayedexpansion
 chcp 65001 >nul
 
-rem 一键打通：解析协议中心依赖 -> go mod tidy -> build -> test
+rem 一键打通：解析协议中心依赖 -> go mod tidy -> 格式化 -> build -> test
 rem
 rem go.mod 里协议中心的版本是占位符，直接 go mod tidy 解析不到：
 rem 协议契约不在本仓库，而在协议中心（kronos-share-proto-template 生成的仓库）。
@@ -12,19 +12,22 @@ set "PROTO_MODULE=<% .ShareProtoModule %>"
 set "PROTO_VERSION=<% .ShareProtoVersion %>"
 set "SKIP_TEST=false"
 set "SKIP_PROTO=false"
+set "SKIP_FMT=false"
 
 :parse_args
 if "%~1"=="" goto after_parse_args
 if /i "%~1"=="--skip-test" set "SKIP_TEST=true" && shift && goto parse_args
 if /i "%~1"=="--skip-proto" set "SKIP_PROTO=true" && shift && goto parse_args
+if /i "%~1"=="--skip-fmt" set "SKIP_FMT=true" && shift && goto parse_args
 if /i "%~1"=="--help" goto show_help
 if /i "%~1"=="-h" goto show_help
 echo ❌ 未知选项: %~1
 exit /b 1
 
 :show_help
-echo 用法: scripts\init.bat [--skip-proto] [--skip-test]
+echo 用法: scripts\init.bat [--skip-proto] [--skip-fmt] [--skip-test]
 echo   --skip-proto  跳过协议中心依赖解析
+echo   --skip-fmt    跳过 go fmt（不建议：生成产物开箱就过不了 gofmt 检查）
 echo   --skip-test   跳过 go test 自检
 exit /b 0
 
@@ -48,13 +51,13 @@ for /f "tokens=3" %%v in ('go version') do echo ✅ Go: %%v
 echo.
 
 if "%SKIP_PROTO%"=="true" (
-    echo ⚠️  [1/4] 按 --skip-proto 跳过协议中心依赖解析
+    echo ⚠️  [1/5] 按 --skip-proto 跳过协议中心依赖解析
 ) else (
     findstr /r /c:"^replace[ 	]*%PROTO_MODULE%" go.mod >nul 2>&1
     if not errorlevel 1 (
-        echo ⚠️  [1/4] go.mod 里已打开本地 replace，跳过远端版本解析
+        echo ⚠️  [1/5] go.mod 里已打开本地 replace，跳过远端版本解析
     ) else (
-        echo ℹ️  [1/4] 解析协议中心依赖 %PROTO_MODULE%@%PROTO_VERSION%
+        echo ℹ️  [1/5] 解析协议中心依赖 %PROTO_MODULE%@%PROTO_VERSION%
         go get %PROTO_MODULE%@%PROTO_VERSION%
         if errorlevel 1 (
             echo.
@@ -78,7 +81,7 @@ if "%SKIP_PROTO%"=="true" (
 )
 echo.
 
-echo ℹ️  [2/4] go mod tidy
+echo ℹ️  [2/5] go mod tidy
 go mod tidy
 if errorlevel 1 (
     echo ❌ go mod tidy 失败
@@ -87,7 +90,27 @@ if errorlevel 1 (
 echo ✅ 依赖整理完成
 echo.
 
-echo ℹ️  [3/4] go build ./...
+rem 为什么模板需要格式化这一步，而普通 Go 工程不需要：
+rem 模板里的标识符是占位符，渲染后长度会变，而 gofmt 的列对齐按实际标识符长度算，
+rem 所以模板源码里对齐的那几处渲染成实际名字后列就错开了——「对齐」在渲染前算不出来
+rem import 块的排序同理，取决于 OrgName / ProjectName 渲染成什么
+rem 不做这一步，每个新生成的项目开箱就过不了 gofmt -l，而 .golangci.yml 里
+rem gofmt 与 goimports 两个 linter 都是开的，第一次推送 CI 就是红的
+rem 放在 build 之前：编译的必须是最终形态
+if "%SKIP_FMT%"=="true" (
+    echo ⚠️  [3/5] 按 --skip-fmt 跳过格式化
+) else (
+    echo ℹ️  [3/5] go fmt ./...
+    go fmt ./...
+    if errorlevel 1 (
+        echo ❌ 格式化失败
+        exit /b 1
+    )
+    echo ✅ 格式化完成
+)
+echo.
+
+echo ℹ️  [4/5] go build ./...
 go build ./...
 if errorlevel 1 (
     echo ❌ 编译失败
@@ -97,9 +120,9 @@ echo ✅ 编译通过
 echo.
 
 if "%SKIP_TEST%"=="true" (
-    echo ⚠️  [4/4] 按 --skip-test 跳过测试
+    echo ⚠️  [5/5] 按 --skip-test 跳过测试
 ) else (
-    echo ℹ️  [4/4] go test ./...
+    echo ℹ️  [5/5] go test ./...
     go test ./...
     if errorlevel 1 (
         echo ❌ 测试失败

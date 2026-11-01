@@ -2,5 +2,26 @@
   "welcome": "Welcome",
   "success": "Success",
   "hello": "Hello",
-  "goodbye": "Goodbye"
+  "goodbye": "Goodbye"<% if eq .GenerateExample "true" %>,
+  "error": {
+    "<% .ExampleService | snake %>_not_found": "<% .ExampleService %> نہیں ملا",
+    "<% .ExampleService | snake %>_already_exists": "<% .ExampleService %> پہلے سے موجود ہے: {{reason}}",
+    "<% .ExampleService | snake %>_invalid_status": "<% .ExampleService %> کی حالت غلط ہے: {{reason}}",
+    "<% .SecondService | snake %>_not_found": "<% .SecondService %> نہیں ملا",
+    "<% .SecondService | snake %>_already_exists": "<% .SecondService %> پہلے سے موجود ہے: {{reason}}",
+    "<% .SecondService | snake %>_invalid_status": "<% .SecondService %> کی حالت غلط ہے: {{reason}}",
+    "<% .MixedService | snake %>_not_found": "<% .MixedService %> نہیں ملا",
+    "<% .MixedService | snake %>_already_exists": "<% .MixedService %> پہلے سے موجود ہے: {{reason}}",
+    "<% .MixedService | snake %>_invalid_status": "<% .MixedService %> کی موجودہ حالت اس عمل کی اجازت نہیں دیتی: {{reason}}",
+    "<% .MixedService | snake %>_region_assignment_not_found": "<% .MixedService %> کی علاقائی تخصیص نہیں ملی",
+    "<% .MixedService | snake %>_member_not_found": "<% .MixedService %> کا رکن نہیں ملا",
+    "<% .MixedService | snake %>_member_already_exists": "<% .MixedService %> کا رکن پہلے سے موجود ہے: {{reason}}",
+    "<% .MixedService | snake %>_member_invalid_role": "<% .MixedService %> کے رکن کا کردار غلط ہے: {{reason}}"
+  },
+  "<% .MixedService | snake %>": {
+    "sync": {
+      "already_synced": "پہلے سے ہم آہنگ ہے، دوبارہ چلانے کی ضرورت نہیں",
+      "triggered": "ڈاؤن اسٹریم ہم آہنگی شروع کر دی گئی"
+    }
+  }<% end %>
 }

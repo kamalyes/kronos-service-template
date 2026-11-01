@@ -2,5 +2,26 @@
   "welcome": "Welcome",
   "success": "Success",
   "hello": "Hello",
-  "goodbye": "Goodbye"
+  "goodbye": "Goodbye"<% if eq .GenerateExample "true" %>,
+  "error": {
+    "<% .ExampleService | snake %>_not_found": "<% .ExampleService %> পাওয়া যায়নি",
+    "<% .ExampleService | snake %>_already_exists": "<% .ExampleService %> ইতিমধ্যে বিদ্যমান: {{reason}}",
+    "<% .ExampleService | snake %>_invalid_status": "<% .ExampleService %> এর স্থিতি অবৈধ: {{reason}}",
+    "<% .SecondService | snake %>_not_found": "<% .SecondService %> পাওয়া যায়নি",
+    "<% .SecondService | snake %>_already_exists": "<% .SecondService %> ইতিমধ্যে বিদ্যমান: {{reason}}",
+    "<% .SecondService | snake %>_invalid_status": "<% .SecondService %> এর স্থিতি অবৈধ: {{reason}}",
+    "<% .MixedService | snake %>_not_found": "<% .MixedService %> পাওয়া যায়নি",
+    "<% .MixedService | snake %>_already_exists": "<% .MixedService %> ইতিমধ্যে বিদ্যমান: {{reason}}",
+    "<% .MixedService | snake %>_invalid_status": "<% .MixedService %> এর বর্তমান স্থিতি এই কাজের অনুমতি দেয় না: {{reason}}",
+    "<% .MixedService | snake %>_region_assignment_not_found": "<% .MixedService %> অঞ্চল নির্ধারণ পাওয়া যায়নি",
+    "<% .MixedService | snake %>_member_not_found": "<% .MixedService %> সদস্য পাওয়া যায়নি",
+    "<% .MixedService | snake %>_member_already_exists": "<% .MixedService %> সদস্য ইতিমধ্যে বিদ্যমান: {{reason}}",
+    "<% .MixedService | snake %>_member_invalid_role": "<% .MixedService %> সদস্যের ভূমিকা অবৈধ: {{reason}}"
+  },
+  "<% .MixedService | snake %>": {
+    "sync": {
+      "already_synced": "ইতিমধ্যে সিঙ্ক হয়েছে, পুনরায় চালানোর প্রয়োজন নেই",
+      "triggered": "ডাউনস্ট্রিম সিঙ্ক শুরু হয়েছে"
+    }
+  }<% end %>
 }

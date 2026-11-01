@@ -1,8 +1,8 @@
 /*
  * @Author: <% .AuthorName %> <% .AuthorEmail %>
- * @Date: <% nowFmt "2006-01-02" %> 00:00:00
+ * @Date: <% nowFmt "2006-01-02" %> 17:05:08
  * @LastEditors: <% .AuthorName %> <% .AuthorEmail %>
- * @LastEditTime: <% nowFmt "2006-01-02" %> 00:00:00
+ * @LastEditTime: <% nowFmt "2006-01-02" %> 19:28:30
  * @FilePath: \<% .ProjectName %>\service\<% .MixedModule %>\<% .MixedService | snake %>_service.go
  * @Description: <% .MixedService %> 聚合根业务逻辑，实现协议中心的 <% .MixedService %>ServiceServer
  *
@@ -14,6 +14,7 @@ package <% .MixedModule %>
 import (
 	"context"
 
+	"github.com/<% .OrgName %>/<% .ProjectName %>/errcodes"
 	"github.com/<% .OrgName %>/<% .ProjectName %>/models"
 	"github.com/<% .OrgName %>/<% .ProjectName %>/service/common"
 	"github.com/<% .OrgName %>/<% .ProjectName %>/repository"
@@ -67,7 +68,7 @@ func (s *<% .MixedService %>Service) <% .MixedService %>Create(
 		return nil, common.DBError(ctx)
 	}
 	if exists {
-		return nil, bizerror.ToGRPCErrorWithTemplate(ctx, bizerror.BizErrCodeConflict,
+		return nil, bizerror.ToGRPCErrorWithTemplate(ctx, errcodes.BizErrCode<% .MixedService | pascal %>AlreadyExists,
 			map[string]any{"reason": req.GetCode()})
 	}
 
@@ -129,7 +130,7 @@ func (s *<% .MixedService %>Service) <% .MixedService %>Get(
 		return nil, common.DBError(ctx)
 	}
 	if model == nil {
-		return nil, common.NotFound(ctx)
+		return nil, bizerror.ToGRPCError(ctx, errcodes.BizErrCode<% .MixedService | pascal %>NotFound)
 	}
 
 	info, err := model.ToPB(ctx)
@@ -191,7 +192,7 @@ func (s *<% .MixedService %>Service) <% .MixedService %>Update(
 		return nil, common.DBError(ctx)
 	}
 	if fresh == nil {
-		return nil, common.NotFound(ctx)
+		return nil, bizerror.ToGRPCError(ctx, errcodes.BizErrCode<% .MixedService | pascal %>NotFound)
 	}
 	info, err := fresh.ToPB(ctx)
 	if err != nil {
@@ -244,7 +245,28 @@ func (s *<% .MixedService %>Service) <% .MixedService %>RetrySync(
 		return nil, common.DBError(ctx)
 	}
 	if model == nil {
-		return nil, common.NotFound(ctx)
+		return nil, bizerror.ToGRPCError(ctx, errcodes.BizErrCode<% .MixedService | pascal %>NotFound)
+	}
+
+	// 冻结的 <% .MixedService %> 不触发下游同步：协议中心的状态机是 待激活 → 正常 → 冻结，
+	// 冻结表示这个 <% .MixedService %> 已停止对外活动，把它推给下游只会在对端留下脏数据
+	//
+	// 这里用的是「资源当前状态不满足前置条件」而不是「入参不合法」，所以错误码映射到
+	// FailedPrecondition 而不是 InvalidArgument——请求本身没有任何问题
+	// 它也正是那种不显式 Register 就会变成 500 的码：码值不以 _not_found 结尾，
+	// go-bizerror 的后缀规则接不上，兜底是 Internal
+	//
+	// [EN] A frozen root does not trigger a downstream sync: the hub's state machine runs
+	// pending to normal to frozen, and frozen means this root has stopped operating, so pushing
+	// it downstream only leaves dirty data at the far end. The condition is the resource's
+	// current state rather than a malformed request, so the code maps to FailedPrecondition
+	// rather than InvalidArgument. It is also exactly the kind of code that becomes a 500
+	// without an explicit Register: the value does not end in _not_found, so go-bizerror's
+	// suffix rule does not apply and the fallback is Internal
+	frozen := enumspb.<% .MixedService %>Status_<% .MixedService | snake | upper %>_STATUS_FROZEN
+	if model.Status == frozen {
+		return nil, bizerror.ToGRPCErrorWithTemplate(ctx, errcodes.BizErrCode<% .MixedService | pascal %>InvalidStatus,
+			map[string]any{"reason": model.Status.String()})
 	}
 
 	// 已同步成功且未要求强制时直接返回当前状态，不重复触发
@@ -292,7 +314,10 @@ func (s *<% .MixedService %>Service) <% .MixedService %>RegionAssign(
 		return nil, common.DBError(ctx)
 	}
 	if parent == nil {
-		return nil, common.NotFound(ctx)
+		// 缺的是父资源，所以报 <% .MixedService %> 的 not_found，而不是地区分配的
+		// [EN] The parent is what is missing, so this is the root's not-found, not the
+		// assignment's
+		return nil, bizerror.ToGRPCError(ctx, errcodes.BizErrCode<% .MixedService | pascal %>NotFound)
 	}
 
 	if req.GetPrimary() {
@@ -338,7 +363,11 @@ func (s *<% .MixedService %>Service) <% .MixedService %>RegionAssignmentUpdate(
 		return nil, common.DBError(ctx)
 	}
 	if current == nil {
-		return nil, common.NotFound(ctx)
+		// 子资源专属 not_found：父存在而子不存在时报父的 not_found，
+		// 调用方会以为自己拿错了父 ID，去查一个其实没问题的东西
+		// [EN] The sub-resource's own not-found: reporting the parent's would make the caller
+		// believe it holds the wrong parent id and debug something that is in fact correct
+		return nil, bizerror.ToGRPCError(ctx, errcodes.BizErrCode<% .MixedService | pascal %>RegionAssignmentNotFound)
 	}
 
 	if req.GetPrimary() != nil && req.GetPrimary().GetValue() {
@@ -355,8 +384,11 @@ func (s *<% .MixedService %>Service) <% .MixedService %>RegionAssignmentUpdate(
 	}
 
 	fresh, err := s.repo.Regions.GetByIDScoped(ctx, tenantID, assignmentID)
-	if err != nil || fresh == nil {
+	if err != nil {
 		return nil, common.DBError(ctx)
+	}
+	if fresh == nil {
+		return nil, bizerror.ToGRPCError(ctx, errcodes.BizErrCode<% .MixedService | pascal %>RegionAssignmentNotFound)
 	}
 	pbAssignment, err := fresh.ToPB(ctx)
 	if err != nil {

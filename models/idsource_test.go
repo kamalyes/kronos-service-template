@@ -1,8 +1,8 @@
 /*
  * @Author: <% .AuthorName %> <% .AuthorEmail %>
- * @Date: <% nowFmt "2006-01-02" %> 00:00:00
+ * @Date: <% nowFmt "2006-01-02" %> 18:10:33
  * @LastEditors: <% .AuthorName %> <% .AuthorEmail %>
- * @LastEditTime: <% nowFmt "2006-01-02" %> 00:00:00
+ * @LastEditTime: <% nowFmt "2006-01-02" %> 19:30:27
  * @FilePath: \<% .ProjectName %>\models\idsource_test.go
  * @Description: 号段分发的缓冲、降级与并发行为
  *

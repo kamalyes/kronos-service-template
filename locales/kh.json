@@ -2,5 +2,26 @@
   "welcome": "Welcome",
   "success": "Success",
   "hello": "Hello",
-  "goodbye": "Goodbye"
+  "goodbye": "Goodbye"<% if eq .GenerateExample "true" %>,
+  "error": {
+    "<% .ExampleService | snake %>_not_found": "រកមិនឃើញ <% .ExampleService %>",
+    "<% .ExampleService | snake %>_already_exists": "<% .ExampleService %> មានរួចហើយ៖ {{reason}}",
+    "<% .ExampleService | snake %>_invalid_status": "ស្ថានភាព <% .ExampleService %> មិនត្រឹមត្រូវ៖ {{reason}}",
+    "<% .SecondService | snake %>_not_found": "រកមិនឃើញ <% .SecondService %>",
+    "<% .SecondService | snake %>_already_exists": "<% .SecondService %> មានរួចហើយ៖ {{reason}}",
+    "<% .SecondService | snake %>_invalid_status": "ស្ថានភាព <% .SecondService %> មិនត្រឹមត្រូវ៖ {{reason}}",
+    "<% .MixedService | snake %>_not_found": "រកមិនឃើញ <% .MixedService %>",
+    "<% .MixedService | snake %>_already_exists": "<% .MixedService %> មានរួចហើយ៖ {{reason}}",
+    "<% .MixedService | snake %>_invalid_status": "ស្ថានភាពបច្ចុប្បន្នរបស់ <% .MixedService %> មិនអនុញ្ញាតប្រតិបត្តិការនេះ៖ {{reason}}",
+    "<% .MixedService | snake %>_region_assignment_not_found": "រកមិនឃើញការបែងចែកតំបន់របស់ <% .MixedService %>",
+    "<% .MixedService | snake %>_member_not_found": "រកមិនឃើញសមាជិករបស់ <% .MixedService %>",
+    "<% .MixedService | snake %>_member_already_exists": "សមាជិករបស់ <% .MixedService %> មានរួចហើយ៖ {{reason}}",
+    "<% .MixedService | snake %>_member_invalid_role": "តួនាទីសមាជិករបស់ <% .MixedService %> មិនត្រឹមត្រូវ៖ {{reason}}"
+  },
+  "<% .MixedService | snake %>": {
+    "sync": {
+      "already_synced": "បានធ្វើសមកាលកម្មរួចហើយ មិនចាំបាច់ធ្វើឡើងវិញទេ",
+      "triggered": "បានចាប់ផ្តើមធ្វើសមកាលកម្មទៅប្រព័ន្ធខាងក្រោម"
+    }
+  }<% end %>
 }

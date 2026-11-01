@@ -2,5 +2,26 @@
   "welcome": "Добро пожаловать",
   "success": "Успешно",
   "hello": "Здравствуйте",
-  "goodbye": "До свидания"
+  "goodbye": "До свидания"<% if eq .GenerateExample "true" %>,
+  "error": {
+    "<% .ExampleService | snake %>_not_found": "<% .ExampleService %> не найден",
+    "<% .ExampleService | snake %>_already_exists": "<% .ExampleService %> уже существует: {{reason}}",
+    "<% .ExampleService | snake %>_invalid_status": "Недопустимый статус <% .ExampleService %>: {{reason}}",
+    "<% .SecondService | snake %>_not_found": "<% .SecondService %> не найден",
+    "<% .SecondService | snake %>_already_exists": "<% .SecondService %> уже существует: {{reason}}",
+    "<% .SecondService | snake %>_invalid_status": "Недопустимый статус <% .SecondService %>: {{reason}}",
+    "<% .MixedService | snake %>_not_found": "<% .MixedService %> не найден",
+    "<% .MixedService | snake %>_already_exists": "<% .MixedService %> уже существует: {{reason}}",
+    "<% .MixedService | snake %>_invalid_status": "Текущий статус <% .MixedService %> не позволяет выполнить эту операцию: {{reason}}",
+    "<% .MixedService | snake %>_region_assignment_not_found": "Назначение региона для <% .MixedService %> не найдено",
+    "<% .MixedService | snake %>_member_not_found": "Участник <% .MixedService %> не найден",
+    "<% .MixedService | snake %>_member_already_exists": "Участник <% .MixedService %> уже существует: {{reason}}",
+    "<% .MixedService | snake %>_member_invalid_role": "Недопустимая роль участника <% .MixedService %>: {{reason}}"
+  },
+  "<% .MixedService | snake %>": {
+    "sync": {
+      "already_synced": "Уже синхронизировано, повторный запуск не требуется",
+      "triggered": "Синхронизация с нижестоящим сервисом запущена"
+    }
+  }<% end %>
 }

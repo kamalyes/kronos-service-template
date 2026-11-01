@@ -2,5 +2,26 @@
   "welcome": "Welcome",
   "success": "Success",
   "hello": "Hello",
-  "goodbye": "Goodbye"
+  "goodbye": "Goodbye"<% if eq .GenerateExample "true" %>,
+  "error": {
+    "<% .ExampleService | snake %>_not_found": "<% .ExampleService %> ကို ရှာမတွေ့ပါ",
+    "<% .ExampleService | snake %>_already_exists": "<% .ExampleService %> ရှိပြီးသားဖြစ်သည်: {{reason}}",
+    "<% .ExampleService | snake %>_invalid_status": "<% .ExampleService %> အခြေအနေ မမှန်ကန်ပါ: {{reason}}",
+    "<% .SecondService | snake %>_not_found": "<% .SecondService %> ကို ရှာမတွေ့ပါ",
+    "<% .SecondService | snake %>_already_exists": "<% .SecondService %> ရှိပြီးသားဖြစ်သည်: {{reason}}",
+    "<% .SecondService | snake %>_invalid_status": "<% .SecondService %> အခြေအနေ မမှန်ကန်ပါ: {{reason}}",
+    "<% .MixedService | snake %>_not_found": "<% .MixedService %> ကို ရှာမတွေ့ပါ",
+    "<% .MixedService | snake %>_already_exists": "<% .MixedService %> ရှိပြီးသားဖြစ်သည်: {{reason}}",
+    "<% .MixedService | snake %>_invalid_status": "<% .MixedService %> ၏ လက်ရှိအခြေအနေသည် ဤလုပ်ဆောင်ချက်ကို ခွင့်မပြုပါ: {{reason}}",
+    "<% .MixedService | snake %>_region_assignment_not_found": "<% .MixedService %> ဒေသသတ်မှတ်ချက်ကို ရှာမတွေ့ပါ",
+    "<% .MixedService | snake %>_member_not_found": "<% .MixedService %> အဖွဲ့ဝင်ကို ရှာမတွေ့ပါ",
+    "<% .MixedService | snake %>_member_already_exists": "<% .MixedService %> အဖွဲ့ဝင် ရှိပြီးသားဖြစ်သည်: {{reason}}",
+    "<% .MixedService | snake %>_member_invalid_role": "<% .MixedService %> အဖွဲ့ဝင် အခန်းကဏ္ဍ မမှန်ကန်ပါ: {{reason}}"
+  },
+  "<% .MixedService | snake %>": {
+    "sync": {
+      "already_synced": "ထပ်တူပြုပြီးဖြစ်သည်၊ ထပ်မံလုပ်ဆောင်ရန် မလိုပါ",
+      "triggered": "အောက်ပိုင်း ထပ်တူပြုမှုကို စတင်လိုက်ပါပြီ"
+    }
+  }<% end %>
 }

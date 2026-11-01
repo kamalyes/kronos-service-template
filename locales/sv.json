@@ -2,5 +2,26 @@
   "welcome": "Välkommen",
   "success": "Lyckades",
   "hello": "Hej",
-  "goodbye": "Hejdå"
+  "goodbye": "Hejdå"<% if eq .GenerateExample "true" %>,
+  "error": {
+    "<% .ExampleService | snake %>_not_found": "<% .ExampleService %> hittades inte",
+    "<% .ExampleService | snake %>_already_exists": "<% .ExampleService %> finns redan: {{reason}}",
+    "<% .ExampleService | snake %>_invalid_status": "Ogiltig <% .ExampleService %>-status: {{reason}}",
+    "<% .SecondService | snake %>_not_found": "<% .SecondService %> hittades inte",
+    "<% .SecondService | snake %>_already_exists": "<% .SecondService %> finns redan: {{reason}}",
+    "<% .SecondService | snake %>_invalid_status": "Ogiltig <% .SecondService %>-status: {{reason}}",
+    "<% .MixedService | snake %>_not_found": "<% .MixedService %> hittades inte",
+    "<% .MixedService | snake %>_already_exists": "<% .MixedService %> finns redan: {{reason}}",
+    "<% .MixedService | snake %>_invalid_status": "Nuvarande status för <% .MixedService %> tillåter inte den här åtgärden: {{reason}}",
+    "<% .MixedService | snake %>_region_assignment_not_found": "Regiontilldelning för <% .MixedService %> hittades inte",
+    "<% .MixedService | snake %>_member_not_found": "Medlem i <% .MixedService %> hittades inte",
+    "<% .MixedService | snake %>_member_already_exists": "Medlem i <% .MixedService %> finns redan: {{reason}}",
+    "<% .MixedService | snake %>_member_invalid_role": "Ogiltig medlemsroll för <% .MixedService %>: {{reason}}"
+  },
+  "<% .MixedService | snake %>": {
+    "sync": {
+      "already_synced": "Redan synkroniserad, ingen ny körning behövs",
+      "triggered": "Nedströmssynkronisering startad"
+    }
+  }<% end %>
 }

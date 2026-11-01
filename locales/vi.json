@@ -2,5 +2,26 @@
   "welcome": "Welcome",
   "success": "Success",
   "hello": "Hello",
-  "goodbye": "Goodbye"
+  "goodbye": "Goodbye"<% if eq .GenerateExample "true" %>,
+  "error": {
+    "<% .ExampleService | snake %>_not_found": "Không tìm thấy <% .ExampleService %>",
+    "<% .ExampleService | snake %>_already_exists": "<% .ExampleService %> đã tồn tại: {{reason}}",
+    "<% .ExampleService | snake %>_invalid_status": "Trạng thái <% .ExampleService %> không hợp lệ: {{reason}}",
+    "<% .SecondService | snake %>_not_found": "Không tìm thấy <% .SecondService %>",
+    "<% .SecondService | snake %>_already_exists": "<% .SecondService %> đã tồn tại: {{reason}}",
+    "<% .SecondService | snake %>_invalid_status": "Trạng thái <% .SecondService %> không hợp lệ: {{reason}}",
+    "<% .MixedService | snake %>_not_found": "Không tìm thấy <% .MixedService %>",
+    "<% .MixedService | snake %>_already_exists": "<% .MixedService %> đã tồn tại: {{reason}}",
+    "<% .MixedService | snake %>_invalid_status": "Trạng thái hiện tại của <% .MixedService %> không cho phép thao tác này: {{reason}}",
+    "<% .MixedService | snake %>_region_assignment_not_found": "Không tìm thấy phân bổ khu vực của <% .MixedService %>",
+    "<% .MixedService | snake %>_member_not_found": "Không tìm thấy thành viên <% .MixedService %>",
+    "<% .MixedService | snake %>_member_already_exists": "Thành viên <% .MixedService %> đã tồn tại: {{reason}}",
+    "<% .MixedService | snake %>_member_invalid_role": "Vai trò thành viên <% .MixedService %> không hợp lệ: {{reason}}"
+  },
+  "<% .MixedService | snake %>": {
+    "sync": {
+      "already_synced": "Đã đồng bộ, không cần kích hoạt lại",
+      "triggered": "Đã kích hoạt đồng bộ xuống hệ thống phía sau"
+    }
+  }<% end %>
 }

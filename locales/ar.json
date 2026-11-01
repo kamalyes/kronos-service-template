@@ -2,5 +2,26 @@
   "welcome": "أهلاً بك",
   "success": "نجاح",
   "hello": "مرحباً",
-  "goodbye": "مع السلامة"
+  "goodbye": "مع السلامة"<% if eq .GenerateExample "true" %>,
+  "error": {
+    "<% .ExampleService | snake %>_not_found": "<% .ExampleService %> غير موجود",
+    "<% .ExampleService | snake %>_already_exists": "<% .ExampleService %> موجود بالفعل: {{reason}}",
+    "<% .ExampleService | snake %>_invalid_status": "حالة <% .ExampleService %> غير صالحة: {{reason}}",
+    "<% .SecondService | snake %>_not_found": "<% .SecondService %> غير موجود",
+    "<% .SecondService | snake %>_already_exists": "<% .SecondService %> موجود بالفعل: {{reason}}",
+    "<% .SecondService | snake %>_invalid_status": "حالة <% .SecondService %> غير صالحة: {{reason}}",
+    "<% .MixedService | snake %>_not_found": "<% .MixedService %> غير موجود",
+    "<% .MixedService | snake %>_already_exists": "<% .MixedService %> موجود بالفعل: {{reason}}",
+    "<% .MixedService | snake %>_invalid_status": "الحالة الحالية لـ <% .MixedService %> لا تسمح بهذه العملية: {{reason}}",
+    "<% .MixedService | snake %>_region_assignment_not_found": "تعيين منطقة <% .MixedService %> غير موجود",
+    "<% .MixedService | snake %>_member_not_found": "عضو <% .MixedService %> غير موجود",
+    "<% .MixedService | snake %>_member_already_exists": "عضو <% .MixedService %> موجود بالفعل: {{reason}}",
+    "<% .MixedService | snake %>_member_invalid_role": "دور عضو <% .MixedService %> غير صالح: {{reason}}"
+  },
+  "<% .MixedService | snake %>": {
+    "sync": {
+      "already_synced": "تمت المزامنة بالفعل، لا حاجة لإعادة التشغيل",
+      "triggered": "تم بدء المزامنة مع الخدمة التالية"
+    }
+  }<% end %>
 }

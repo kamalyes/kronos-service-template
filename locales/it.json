@@ -2,5 +2,26 @@
   "welcome": "Benvenuto",
   "success": "Successo",
   "hello": "Ciao",
-  "goodbye": "Arrivederci"
+  "goodbye": "Arrivederci"<% if eq .GenerateExample "true" %>,
+  "error": {
+    "<% .ExampleService | snake %>_not_found": "<% .ExampleService %> non trovato",
+    "<% .ExampleService | snake %>_already_exists": "<% .ExampleService %> esiste già: {{reason}}",
+    "<% .ExampleService | snake %>_invalid_status": "Stato di <% .ExampleService %> non valido: {{reason}}",
+    "<% .SecondService | snake %>_not_found": "<% .SecondService %> non trovato",
+    "<% .SecondService | snake %>_already_exists": "<% .SecondService %> esiste già: {{reason}}",
+    "<% .SecondService | snake %>_invalid_status": "Stato di <% .SecondService %> non valido: {{reason}}",
+    "<% .MixedService | snake %>_not_found": "<% .MixedService %> non trovato",
+    "<% .MixedService | snake %>_already_exists": "<% .MixedService %> esiste già: {{reason}}",
+    "<% .MixedService | snake %>_invalid_status": "Lo stato attuale di <% .MixedService %> non consente questa operazione: {{reason}}",
+    "<% .MixedService | snake %>_region_assignment_not_found": "Assegnazione di regione di <% .MixedService %> non trovata",
+    "<% .MixedService | snake %>_member_not_found": "Membro di <% .MixedService %> non trovato",
+    "<% .MixedService | snake %>_member_already_exists": "Il membro di <% .MixedService %> esiste già: {{reason}}",
+    "<% .MixedService | snake %>_member_invalid_role": "Ruolo del membro di <% .MixedService %> non valido: {{reason}}"
+  },
+  "<% .MixedService | snake %>": {
+    "sync": {
+      "already_synced": "Già sincronizzato, non è necessario attivarlo di nuovo",
+      "triggered": "Sincronizzazione a valle attivata"
+    }
+  }<% end %>
 }

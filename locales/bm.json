@@ -2,5 +2,26 @@
   "welcome": "Welcome",
   "success": "Success",
   "hello": "Hello",
-  "goodbye": "Goodbye"
+  "goodbye": "Goodbye"<% if eq .GenerateExample "true" %>,
+  "error": {
+    "<% .ExampleService | snake %>_not_found": "<% .ExampleService %> tidak ditemui",
+    "<% .ExampleService | snake %>_already_exists": "<% .ExampleService %> sudah wujud: {{reason}}",
+    "<% .ExampleService | snake %>_invalid_status": "Status <% .ExampleService %> tidak sah: {{reason}}",
+    "<% .SecondService | snake %>_not_found": "<% .SecondService %> tidak ditemui",
+    "<% .SecondService | snake %>_already_exists": "<% .SecondService %> sudah wujud: {{reason}}",
+    "<% .SecondService | snake %>_invalid_status": "Status <% .SecondService %> tidak sah: {{reason}}",
+    "<% .MixedService | snake %>_not_found": "<% .MixedService %> tidak ditemui",
+    "<% .MixedService | snake %>_already_exists": "<% .MixedService %> sudah wujud: {{reason}}",
+    "<% .MixedService | snake %>_invalid_status": "Status semasa <% .MixedService %> tidak membenarkan operasi ini: {{reason}}",
+    "<% .MixedService | snake %>_region_assignment_not_found": "Peruntukan wilayah <% .MixedService %> tidak ditemui",
+    "<% .MixedService | snake %>_member_not_found": "Anggota <% .MixedService %> tidak ditemui",
+    "<% .MixedService | snake %>_member_already_exists": "Anggota <% .MixedService %> sudah wujud: {{reason}}",
+    "<% .MixedService | snake %>_member_invalid_role": "Peranan anggota <% .MixedService %> tidak sah: {{reason}}"
+  },
+  "<% .MixedService | snake %>": {
+    "sync": {
+      "already_synced": "Sudah disegerakkan, tidak perlu dicetuskan lagi",
+      "triggered": "Penyegerakan hiliran telah dicetuskan"
+    }
+  }<% end %>
 }
