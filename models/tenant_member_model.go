@@ -1,8 +1,8 @@
 /*
  * @Author: kamalyes example@qq.com
- * @Date: 2026-10-31 00:00:00
+ * @Date: 2026-11-01 17:05:08
  * @LastEditors: kamalyes example@qq.com
- * @LastEditTime: 2026-10-31 00:00:00
+ * @LastEditTime: 2026-11-01 19:28:30
  * @FilePath: \kronos-my-service\models\tenant_member_model.go
  * @Description: TenantMember 成员模型
  *
@@ -14,18 +14,19 @@ import (
 	"context"
 	"time"
 
-	commonpb "github.com/kamalyes/kronos-share-proto-template/pb/common"
-	enumspb "github.com/kamalyes/kronos-share-proto-template/pb/enums"
 	bizerror "github.com/kamalyes/go-bizerror"
 	sqlbuilder "github.com/kamalyes/go-sqlbuilder"
+	commonpb "github.com/kamalyes/kronos-share-proto-template/pb/common"
+	enumspb "github.com/kamalyes/kronos-share-proto-template/pb/enums"
 )
 
 // TenantMemberRoles 角色集合，落库为 JSON 数组
 //
 // 角色是「一个成员多个角色」的重复枚举，有三种落库方式：
-//   另开一张 member_roles 关联表 —— 需要按角色反查成员时才值得
-//   每个角色一列的布尔位 —— 加角色就要改表结构，不可取
-//   JSON 数组 —— 本例选它：角色集合总是跟着成员整体读写，没有单独寻址的需求
+//
+//	另开一张 member_roles 关联表 —— 需要按角色反查成员时才值得
+//	每个角色一列的布尔位 —— 加角色就要改表结构，不可取
+//	JSON 数组 —— 本例选它：角色集合总是跟着成员整体读写，没有单独寻址的需求
 //
 // [EN] Roles are a repeated enum. A join table is worth it only when members must be looked up
 // by role; a boolean column per role means a schema change per new role. A JSON array is used
@@ -34,14 +35,14 @@ type TenantMemberRoles = sqlbuilder.Slice[enumspb.TenantMemberRole]
 
 // TenantMemberModel 对应协议中心 common.TenantMemberInfo
 type TenantMemberModel struct {
-	Id          string                        `gorm:"column:id;type:varchar(36);primaryKey;comment:成员ID" json:"id"`
-	TenantId    string                        `gorm:"column:tenant_id;type:varchar(36);not null;index:idx_tenant_members_tenant;comment:所属TenantID" json:"tenant_id"`
-	UserId      string                        `gorm:"column:user_id;type:varchar(36);not null;comment:用户ID" json:"user_id"`
-	DisplayName string                        `gorm:"column:display_name;type:varchar(64);comment:显示名" json:"display_name"`
-	Email       string                        `gorm:"column:email;type:varchar(128);comment:邮箱" json:"email"`
-	Roles       TenantMemberRoles `gorm:"column:roles;type:json;comment:角色列表" json:"roles"`
-	Status      enumspb.CommonStatus          `gorm:"column:status;type:int;default:0;not null;comment:状态" json:"status"`
-	JoinedAt    time.Time                     `gorm:"column:joined_at;autoCreateTime;comment:加入时间" json:"joined_at"`
+	Id          string               `gorm:"column:id;type:varchar(36);primaryKey;comment:成员ID" json:"id"`
+	TenantId    string               `gorm:"column:tenant_id;type:varchar(36);not null;index:idx_tenant_members_tenant;comment:所属TenantID" json:"tenant_id"`
+	UserId      string               `gorm:"column:user_id;type:varchar(36);not null;comment:用户ID" json:"user_id"`
+	DisplayName string               `gorm:"column:display_name;type:varchar(64);comment:显示名" json:"display_name"`
+	Email       string               `gorm:"column:email;type:varchar(128);comment:邮箱" json:"email"`
+	Roles       TenantMemberRoles    `gorm:"column:roles;type:json;comment:角色列表" json:"roles"`
+	Status      enumspb.CommonStatus `gorm:"column:status;type:int;default:0;not null;comment:状态" json:"status"`
+	JoinedAt    time.Time            `gorm:"column:joined_at;autoCreateTime;comment:加入时间" json:"joined_at"`
 }
 
 // TableName 指定表名

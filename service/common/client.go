@@ -1,8 +1,8 @@
 /*
  * @Author: kamalyes example@qq.com
- * @Date: 2026-10-31 00:00:00
+ * @Date: 2026-11-01 17:05:08
  * @LastEditors: kamalyes example@qq.com
- * @LastEditTime: 2026-10-31 00:00:00
+ * @LastEditTime: 2026-11-01 19:28:30
  * @FilePath: \kronos-my-service\service\common\client.go
  * @Description: 服务间 gRPC 客户端持有与取用
  *
@@ -41,13 +41,13 @@ package common
 import (
 	"context"
 
-	"github.com/kamalyes/kronos-my-service/constants"
-	keypb "github.com/kamalyes/kronos-share-proto-template/pb/key"
-	secondpb "github.com/kamalyes/kronos-share-proto-template/pb/inventory"
 	gwconfig "github.com/kamalyes/go-config/pkg/gateway"
-	grpcpool "github.com/kamalyes/go-rpc-gateway/cpool/grpc"
 	gwconstants "github.com/kamalyes/go-rpc-gateway/constants"
+	grpcpool "github.com/kamalyes/go-rpc-gateway/cpool/grpc"
 	gwglobal "github.com/kamalyes/go-rpc-gateway/global"
+	"github.com/kamalyes/kronos-my-service/constants"
+	secondpb "github.com/kamalyes/kronos-share-proto-template/pb/inventory"
+	keypb "github.com/kamalyes/kronos-share-proto-template/pb/key"
 	"google.golang.org/grpc/metadata"
 )
 
@@ -61,9 +61,9 @@ import (
 // service name and a repeat InitClient returns the same ClientConn) and the health state is
 // shared. One holder avoids doubling connections and keeping several health views.
 type Clients struct {
-	health         *grpcpool.HealthChecker
-	IdBlockClient  keypb.IdBlockServiceClient
-	IdBlockReady   bool
+	health        *grpcpool.HealthChecker
+	IdBlockClient keypb.IdBlockServiceClient
+	IdBlockReady  bool
 
 	// 第二下游：混合模块的同步 worker 用它做服务间调用示例
 	// [EN] The second downstream, used by the mixed module's sync worker
@@ -88,12 +88,12 @@ func SetClients(c *Clients) {
 // 这里不自己 grpc.NewClient，一律走 grpcpool.InitClientTo。原因是连接池在拨号时
 // 挂了一整条客户端拦截器链，自己拨号这些全都拿不到：
 //
-//   UnaryClientRequestContextInterceptor —— 把本次请求的 trace_id / request_id /
-//     tenant_id / authorization / accept-language 等三十余个字段注入出向 metadata。
-//     少了它，下游拿不到租户、拿不到语言、链路断在这一跳，下游日志里这些字段全空。
-//   UnaryClientLoggingInterceptor —— 记录每次调用的目标、耗时、结果。
-//   UnaryClientHealthInterceptor —— 下游不健康时直接短路，不耗一次超时。
-//   otelgrpc.NewClientHandler —— 注入 grpc-trace-bin，和 HTTP 侧的 span 串起来。
+//	UnaryClientRequestContextInterceptor —— 把本次请求的 trace_id / request_id /
+//	  tenant_id / authorization / accept-language 等三十余个字段注入出向 metadata。
+//	  少了它，下游拿不到租户、拿不到语言、链路断在这一跳，下游日志里这些字段全空。
+//	UnaryClientLoggingInterceptor —— 记录每次调用的目标、耗时、结果。
+//	UnaryClientHealthInterceptor —— 下游不健康时直接短路，不耗一次超时。
+//	otelgrpc.NewClientHandler —— 注入 grpc-trace-bin，和 HTTP 侧的 span 串起来。
 //
 // 换句话说：服务间调用的链路透传不是业务代码的事，用对了工具就是免费的；
 // 用错了（自己拨号）则要手写三十多个字段的 metadata 注入，且必然漏。

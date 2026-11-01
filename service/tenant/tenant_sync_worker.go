@@ -1,8 +1,8 @@
 /*
  * @Author: kamalyes example@qq.com
- * @Date: 2026-10-31 00:00:00
+ * @Date: 2026-11-01 17:05:08
  * @LastEditors: kamalyes example@qq.com
- * @LastEditTime: 2026-10-31 00:00:00
+ * @LastEditTime: 2026-11-01 19:28:30
  * @FilePath: \kronos-my-service\service\tenant\tenant_sync_worker.go
  * @Description: 下游同步 worker —— 服务间 gRPC 调用示例
  *
@@ -14,18 +14,18 @@ import (
 	"context"
 	"time"
 
+	pbmo "github.com/kamalyes/go-pbmo"
+	gwconstants "github.com/kamalyes/go-rpc-gateway/constants"
+	gwglobal "github.com/kamalyes/go-rpc-gateway/global"
 	"github.com/kamalyes/kronos-my-service/models"
 	"github.com/kamalyes/kronos-my-service/repository"
 	"github.com/kamalyes/kronos-my-service/service/common"
-	secondpb "github.com/kamalyes/kronos-share-proto-template/pb/inventory"
 	commonpb "github.com/kamalyes/kronos-share-proto-template/pb/common"
 	enumspb "github.com/kamalyes/kronos-share-proto-template/pb/enums"
-	gwconstants "github.com/kamalyes/go-rpc-gateway/constants"
-	gwglobal "github.com/kamalyes/go-rpc-gateway/global"
-	pbmo "github.com/kamalyes/go-pbmo"
+	secondpb "github.com/kamalyes/kronos-share-proto-template/pb/inventory"
 	"google.golang.org/grpc/codes"
-	"google.golang.org/grpc/status"
 	"google.golang.org/grpc/metadata"
+	"google.golang.org/grpc/status"
 )
 
 // 服务间 gRPC 调用示例 | Service-to-service gRPC call example

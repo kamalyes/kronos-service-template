@@ -1,8 +1,8 @@
 /*
  * @Author: kamalyes example@qq.com
- * @Date: 2026-10-31 00:00:00
+ * @Date: 2026-11-01 17:05:08
  * @LastEditors: kamalyes example@qq.com
- * @LastEditTime: 2026-10-31 00:00:00
+ * @LastEditTime: 2026-11-01 19:28:30
  * @FilePath: \kronos-my-service\constants\cache.go
  * @Description: 缓存命名空间与时长常量
  *
@@ -25,9 +25,9 @@ import "time"
 // bare module name lets two services with a same-named table overwrite each other, and the
 // symptom is reading another service's data rather than an error.
 const (
-	KVNamespaceCatalog = "kronos-my-service:catalog"
+	KVNamespaceCatalog   = "kronos-my-service:catalog"
 	KVNamespaceInventory = "kronos-my-service:inventory"
-	KVNamespaceTenant = "kronos-my-service:tenant"
+	KVNamespaceTenant    = "kronos-my-service:tenant"
 )
 
 // KVCacheTenantIDByCode code → id 反向索引的注册名

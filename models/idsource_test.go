@@ -1,8 +1,8 @@
 /*
  * @Author: kamalyes example@qq.com
- * @Date: 2026-10-31 00:00:00
+ * @Date: 2026-11-01 18:10:33
  * @LastEditors: kamalyes example@qq.com
- * @LastEditTime: 2026-10-31 00:00:00
+ * @LastEditTime: 2026-11-01 19:30:27
  * @FilePath: \kronos-my-service\models\idsource_test.go
  * @Description: 号段分发的缓冲、降级与并发行为
  *

@@ -1,8 +1,8 @@
 /*
  * @Author: kamalyes example@qq.com
- * @Date: 2026-10-31 00:00:00
+ * @Date: 2026-11-01 17:05:08
  * @LastEditors: kamalyes 501893067@qq.com
- * @LastEditTime: 2026-10-31 00:00:00
+ * @LastEditTime: 2026-11-01 19:28:30
  * @FilePath: \kronos-my-service\repository\factory.go
  * @Description: 仓库工厂，统一管理所有仓库实例
  *
@@ -19,9 +19,9 @@ import (
 
 // RepositoryFactory 仓库工厂结构体
 type RepositoryFactory struct {
-	Product *ProductRepository
-	Warehouse  *WarehouseRepository
-	Tenant   *TenantRepository
+	Product      *ProductRepository
+	Warehouse    *WarehouseRepository
+	Tenant       *TenantRepository
 	TenantMember *TenantMemberRepository
 }
 
@@ -34,9 +34,9 @@ var (
 func NewRepositoryFactory() *RepositoryFactory {
 	factoryOnce.Do(func() {
 		factoryInstance = &RepositoryFactory{
-			Product: NewProductRepository(),
-			Warehouse:  NewWarehouseRepository(),
-			Tenant:   NewTenantRepository(),
+			Product:      NewProductRepository(),
+			Warehouse:    NewWarehouseRepository(),
+			Tenant:       NewTenantRepository(),
 			TenantMember: NewTenantMemberRepository(),
 		}
 	})

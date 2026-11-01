@@ -1,8 +1,8 @@
 /*
  * @Author: kamalyes example@qq.com
- * @Date: 2026-10-31 00:00:00
+ * @Date: 2026-11-01 17:05:08
  * @LastEditors: kamalyes example@qq.com
- * @LastEditTime: 2026-10-31 00:00:00
+ * @LastEditTime: 2026-11-01 19:28:30
  * @FilePath: \kronos-my-service\service\common\cache.go
  * @Description: 跨模块字段级缓存读取（列表回显与存在性校验）
  *
@@ -13,9 +13,9 @@ package common
 import (
 	"context"
 
+	cachex "github.com/kamalyes/go-cachex"
 	"github.com/kamalyes/kronos-my-service/constants"
 	"github.com/kamalyes/kronos-my-service/models"
-	cachex "github.com/kamalyes/go-cachex"
 )
 
 // 为什么这些 helper 放在 common 而不是各模块自己写

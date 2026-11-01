@@ -1,8 +1,8 @@
 /*
  * @Author: kamalyes example@qq.com
- * @Date: 2026-10-31 00:00:00
+ * @Date: 2026-11-01 17:05:08
  * @LastEditors: kamalyes example@qq.com
- * @LastEditTime: 2026-10-31 00:00:00
+ * @LastEditTime: 2026-11-01 19:28:30
  * @FilePath: \kronos-my-service\bootstrap\pbmo.go
  * @Description: Model-PB 转换器注册
  *
@@ -11,9 +11,9 @@
 package bootstrap
 
 import (
+	pbmo "github.com/kamalyes/go-pbmo"
 	"github.com/kamalyes/kronos-my-service/models"
 	commonpb "github.com/kamalyes/kronos-share-proto-template/pb/common"
-	pbmo "github.com/kamalyes/go-pbmo"
 )
 
 // registerConverters 注册所有 Model-PB 转换器
@@ -23,8 +23,10 @@ import (
 // 那一次会落在请求路径上。
 //
 // 字段名两侧一致即自动配对（不分大小写）。名字对不上时显式声明：
-//   单条 .WithFieldMapping("ID", "XxxId")
-//   多条 .WithFieldMappings(map[string]string{"ID": "XxxId", "CreatedBy": "CreatorId"})
+//
+//	单条 .WithFieldMapping("ID", "XxxId")
+//	多条 .WithFieldMappings(map[string]string{"ID": "XxxId", "CreatedBy": "CreatorId"})
+//
 // 值本身需要换算（枚举口径不同、单位不同）用 .RegisterTransformer(field, fn)，
 // 那是按字段挂一个转换函数，和改名是两件事。
 //

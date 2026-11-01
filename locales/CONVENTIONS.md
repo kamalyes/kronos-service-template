@@ -37,17 +37,31 @@
 
 ## 文件结构
 
-每个语言文件都遵循相同的JSON结构：
+每个语言文件都遵循相同的JSON结构：开头是几个通用占位键，错误文案全部放在 `error` 对象下
 
 ```json
 {
+  "welcome": "Welcome",
+  "success": "Success",
+  "hello": "Hello",
+  "goodbye": "Goodbye",
   "error": {
-    "internal": "翻译的错误消息",
-    "invalid_argument": "翻译的错误消息",
-    ...
+    "product_not_found": "Product not found",
+    "product_already_exists": "Product already exists: {{reason}}"
   }
 }
 ```
+
+go-i18n 在加载时把嵌套结构按点号拍平（见 `FlattenToMessages`），所以 `error` 对象里的
+`product_not_found` 查找键就是 `error.product_not_found`——这正好是 `errcodes` 里那个码的值
+
+**本仓库是 kopy 模板**，所以实体名是占位符，`error` 整块也包在
+` ... ` 里：关掉示例时只保留前 4 个占位键，
+JSON 两种情况下都合法改这些文件时不要把条件块拆开，否则关掉示例那条路径会渲染出
+多一个逗号的非法 JSON
+
+通用错误码（`error.not_found`、`error.conflict` 等）**不在这里**：它们的文案由 go-bizerror
+内置兜底，服务侧只在需要覆盖时才写同名键
 
 ## 添加新语言
 
@@ -76,9 +90,13 @@
 ```go
 import (
     gatewayMiddleware "github.com/kamalyes/go-rpc-gateway/middleware"
-    "github.com/kronos/kronos/MyService/errors"
+    bizerror "github.com/kamalyes/go-bizerror"
+    "github.com/kamalyes/kronos-my-service/errcodes"
 )
 ```
+
+通用码在 `bizerror`（go-bizerror），实体专属码在本服务的 `errcodes` 包——不要再找
+`<项目>/errors`，那个包不存在，错误构造函数在 go-bizerror 里
 
 #### 2. 简单消息翻译
 
@@ -86,7 +104,7 @@ import (
 
 ```go
 // 获取简单的错误消息
-message := gatewayMiddleware.T(ctx, "error.ticket_not_found")
+message := gatewayMiddleware.T(ctx, errcodes.BizErrCodeProductNotFound)
 ```
 
 #### 3. 带变量的消息翻译
@@ -103,11 +121,21 @@ message := gatewayMiddleware.TWithMap(ctx, "error.agent_assigned_success", map[s
 #### 4. 在错误返回中使用
 
 ```go
-// 创建国际化错误
-if !isOnline {
-    return errors.New(gatewayMiddleware.T(ctx, "error.already_offline"))
+// 返回带状态码的业务错误：文案由 go-bizerror 按请求语言解析，不要自己拼句子
+if model == nil {
+    return nil, bizerror.ToGRPCError(ctx, errcodes.BizErrCodeProductNotFound)
+}
+
+// 带模板变量的
+if exists {
+    return nil, bizerror.ToGRPCErrorWithTemplate(ctx, errcodes.BizErrCodeProductAlreadyExists,
+        map[string]any{"reason": req.GetCode()})
 }
 ```
+
+⚠️ 带占位符的文案一定要走带模板的函数`GetMsgByKey` / `T` 不套模板，调用方会收到字面量
+`{{reason}}`需要直接取文案（比如批量接口的逐条 `error_message`）时用
+`gatewayMiddleware.GetMsgWithMap(ctx, code, map[string]any{"reason": email})`
 
 ### 模板变量语法
 
@@ -146,8 +174,12 @@ gatewayMiddleware.TWithMap(ctx, "error.user_not_found", map[string]any{
 1. **统一命名空间**：所有错误消息使用 `error.*` 命名空间
 2. **复用优先**：优先使用已有的 i18n key，避免重复定义
 3. **语义化命名**：key 名称要清晰表达含义，如 `ticket_not_found` 而不是 `err1`
-4. **完整覆盖**：新增 key 必须在所有语言文件中同步添加（当前共 28 个）
-5. **模板变量**：使用有意义的变量名，如 `agentId` 而不是 `id`
+4. **完整覆盖**：新增 key 必须在所有语言文件中同步添加（当前共 28 个），且各文件的键集合
+   完全相等——少一个文件就只有那种语言会回退，而这种 bug 只在特定 `Accept-Language` 下出现
+5. **码与键同源**：错误码的值就是它的 i18n key，新增码时 `errcodes/codes.go` 的常量、
+   `errcodes.Mappings()` 的映射、28 个语言文件的键三件事要一起做；只做前一件的话该码会
+   以 500 返回（除非码值以 `_not_found` 结尾）
+6. **模板变量**：使用有意义的变量名，如 `agentId` 而不是 `id`
 
 ### 常见问题
 
@@ -173,7 +205,8 @@ A: 检查以下几点：
 
 **Q: 如何查看已有的 i18n key？**
 
-A: 查看 `locales/en.json` 或 `locales/zh.json` ... 文件，所有 key 都在 `error` 对象下
+A: 本服务自己的 key 看 `locales/en.json` 或 `locales/zh.json`，错误类的 key 都在 `error`
+对象下；跨服务通用码的兜底文案不在这里，见 go-bizerror 的 `builtin_messages.go`
 
 ## 翻译注意事项
 

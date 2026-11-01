@@ -1,8 +1,8 @@
 /*
  * @Author: kamalyes example@qq.com
- * @Date: 2026-10-31 00:00:00
+ * @Date: 2026-11-01 18:10:33
  * @LastEditors: kamalyes example@qq.com
- * @LastEditTime: 2026-10-31 00:00:00
+ * @LastEditTime: 2026-11-01 19:30:27
  * @FilePath: \kronos-my-service\models\conversion_contract_test.go
  * @Description: Model-PB 转换契约测试，守住字段映射不随协议演进而断裂
  *
@@ -17,11 +17,11 @@ import (
 	"testing"
 	"time"
 
+	pbmo "github.com/kamalyes/go-pbmo"
 	commonpb "github.com/kamalyes/kronos-share-proto-template/pb/common"
 	enumspb "github.com/kamalyes/kronos-share-proto-template/pb/enums"
-	pbmo "github.com/kamalyes/go-pbmo"
-	"gorm.io/gorm/schema"
 	"google.golang.org/protobuf/runtime/protoimpl"
+	"gorm.io/gorm/schema"
 )
 
 // 为什么需要这组测试 | Why these tests exist
@@ -87,9 +87,9 @@ func TestConvertProductModelToPB(t *testing.T) {
 	m := &ProductModel{
 		Id: "id-1", TenantId: "t-1", PlatformId: "p-1", RegionId: "r-1",
 		Name: "name", Code: "code",
-		Type:   enumspb.ProductType_PRODUCT_TYPE_PERSONAL,
-		Level:  enumspb.ProductLevel_PRODUCT_LEVEL_SILVER,
-		Status: enumspb.CommonStatus_COMMON_STATUS_NORMAL,
+		Type:      enumspb.ProductType_PRODUCT_TYPE_PERSONAL,
+		Level:     enumspb.ProductLevel_PRODUCT_LEVEL_SILVER,
+		Status:    enumspb.CommonStatus_COMMON_STATUS_NORMAL,
 		Tags:      []string{"a"},
 		CreatedAt: time.Now(), UpdatedAt: time.Now(),
 	}
@@ -109,9 +109,9 @@ func TestConvertWarehouseModelToPB(t *testing.T) {
 	ctx := context.Background()
 	m := &WarehouseModel{
 		Id: "id-1", TenantId: "t-1", Name: "name", Code: "code",
-		IconUrl:  "https://example.com/i.png", SortOrder: 3,
-		Category: enumspb.WarehouseCategory_WAREHOUSE_CATEGORY_PREMIUM,
-		Status:   enumspb.CommonStatus_COMMON_STATUS_NORMAL,
+		IconUrl: "https://example.com/i.png", SortOrder: 3,
+		Category:  enumspb.WarehouseCategory_WAREHOUSE_CATEGORY_PREMIUM,
+		Status:    enumspb.CommonStatus_COMMON_STATUS_NORMAL,
 		CreatedAt: time.Now(), UpdatedAt: time.Now(),
 	}
 	info, err := m.ToPB(ctx)
@@ -127,10 +127,10 @@ func TestConvertTenantModelToPB(t *testing.T) {
 	ctx := context.Background()
 	m := &TenantModel{
 		Id: "id-1", Code: "code", Name: "name",
-		Status:    enumspb.TenantStatus_TENANT_STATUS_NORMAL,
-		SyncState: enumspb.TenantSyncState_TENANT_SYNC_STATE_SYNCED,
+		Status:     enumspb.TenantStatus_TENANT_STATUS_NORMAL,
+		SyncState:  enumspb.TenantSyncState_TENANT_SYNC_STATE_SYNCED,
 		PlatformId: "p-1", RegionId: "r-1", MemberCount: 5,
-		CreatedAt:  time.Now(), UpdatedAt: time.Now(),
+		CreatedAt: time.Now(), UpdatedAt: time.Now(),
 	}
 	info, err := m.ToPB(ctx)
 	if err != nil {
@@ -148,11 +148,11 @@ func TestConvertTenantMemberModelToPB(t *testing.T) {
 	m := &TenantMemberModel{
 		Id: "id-1", TenantId: "t-1", UserId: "u-1",
 		DisplayName: "someone", Email: "a@b.c",
-		Status:      enumspb.CommonStatus_COMMON_STATUS_NORMAL,
+		Status: enumspb.CommonStatus_COMMON_STATUS_NORMAL,
 		Roles: TenantMemberRoles{
 			enumspb.TenantMemberRole_TENANT_MEMBER_ROLE_OWNER,
 		},
-		JoinedAt:    time.Now(),
+		JoinedAt: time.Now(),
 	}
 	info, err := m.ToPB(ctx)
 	if err != nil {

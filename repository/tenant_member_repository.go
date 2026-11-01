@@ -1,8 +1,8 @@
 /*
  * @Author: kamalyes example@qq.com
- * @Date: 2026-10-31 00:00:00
+ * @Date: 2026-11-01 17:05:08
  * @LastEditors: kamalyes example@qq.com
- * @LastEditTime: 2026-10-31 00:00:00
+ * @LastEditTime: 2026-11-01 19:28:30
  * @FilePath: \kronos-my-service\repository\tenant_member_repository.go
  * @Description: TenantMember 数据访问层
  *
@@ -13,10 +13,10 @@ package repository
 import (
 	"context"
 
-	"github.com/kamalyes/kronos-my-service/models"
-	pb "github.com/kamalyes/kronos-share-proto-template/pb/tenant"
 	sqlconstants "github.com/kamalyes/go-sqlbuilder/constants"
 	sqlrepo "github.com/kamalyes/go-sqlbuilder/repository"
+	"github.com/kamalyes/kronos-my-service/models"
+	pb "github.com/kamalyes/kronos-share-proto-template/pb/tenant"
 )
 
 // TenantMemberRepository 成员仓库

@@ -1,8 +1,8 @@
 /*
  * @Author: kamalyes example@qq.com
- * @Date: 2026-10-31 00:00:00
+ * @Date: 2026-11-01 17:05:08
  * @LastEditors: kamalyes example@qq.com
- * @LastEditTime: 2026-10-31 00:00:00
+ * @LastEditTime: 2026-11-01 19:28:30
  * @FilePath: \kronos-my-service\bootstrap\database.go
  * @Description: 数据库初始化，执行自动迁移、索引创建和表注释
  *
@@ -12,9 +12,9 @@ package bootstrap
 
 import (
 	"fmt"
-	"github.com/kamalyes/kronos-my-service/migrations"
 	goconfig "github.com/kamalyes/go-config"
 	gwglobal "github.com/kamalyes/go-rpc-gateway/global"
+	"github.com/kamalyes/kronos-my-service/migrations"
 )
 
 // initDatabase 初始化数据库

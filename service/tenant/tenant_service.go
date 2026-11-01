@@ -1,8 +1,8 @@
 /*
  * @Author: kamalyes example@qq.com
- * @Date: 2026-10-31 00:00:00
+ * @Date: 2026-11-01 17:05:08
  * @LastEditors: kamalyes example@qq.com
- * @LastEditTime: 2026-10-31 00:00:00
+ * @LastEditTime: 2026-11-01 19:28:30
  * @FilePath: \kronos-my-service\service\tenant\tenant_service.go
  * @Description: Tenant 聚合根业务逻辑，实现协议中心的 TenantServiceServer
  *
@@ -13,25 +13,27 @@ package tenant
 import (
 	"context"
 
-	"github.com/kamalyes/kronos-my-service/models"
-	"github.com/kamalyes/kronos-my-service/service/common"
-	"github.com/kamalyes/kronos-my-service/repository"
-	pb "github.com/kamalyes/kronos-share-proto-template/pb/tenant"
-	commonpb "github.com/kamalyes/kronos-share-proto-template/pb/common"
-	enumspb "github.com/kamalyes/kronos-share-proto-template/pb/enums"
 	bizerror "github.com/kamalyes/go-bizerror"
 	pbmo "github.com/kamalyes/go-pbmo"
 	gwglobal "github.com/kamalyes/go-rpc-gateway/global"
 	gwmiddleware "github.com/kamalyes/go-rpc-gateway/middleware"
+	"github.com/kamalyes/kronos-my-service/errcodes"
+	"github.com/kamalyes/kronos-my-service/models"
+	"github.com/kamalyes/kronos-my-service/repository"
+	"github.com/kamalyes/kronos-my-service/service/common"
+	commonpb "github.com/kamalyes/kronos-share-proto-template/pb/common"
+	enumspb "github.com/kamalyes/kronos-share-proto-template/pb/enums"
+	pb "github.com/kamalyes/kronos-share-proto-template/pb/tenant"
 )
 
 // TenantService 实现协议中心 pb.TenantServiceServer
 //
 // 这个 service 覆盖了协议中心规范里讲的三类接口形态，前两个示例只有第一类：
-//   标准 CRUD        Create / Get / List / Update / Delete
-//   动作型           RetrySync —— 触发一次行为，不是改字段，结果用枚举而非 bool
-//   子资源           RegionAssign / RegionAssignmentUpdate / RegionAssignmentRemove
-//                   有独立 ID、单独增改删，父 ID 只放路径不进 body
+//
+//	标准 CRUD        Create / Get / List / Update / Delete
+//	动作型           RetrySync —— 触发一次行为，不是改字段，结果用枚举而非 bool
+//	子资源           RegionAssign / RegionAssignmentUpdate / RegionAssignmentRemove
+//	                有独立 ID、单独增改删，父 ID 只放路径不进 body
 //
 // 它与 TenantMemberService 共用 proto 包与 Go 包（同一个 tenant 模块），
 // 但两者不互相 import——共享的类型在 common/ 里，否则两个 service 又被焊回一起。
@@ -66,7 +68,7 @@ func (s *TenantService) TenantCreate(
 		return nil, common.DBError(ctx)
 	}
 	if exists {
-		return nil, bizerror.ToGRPCErrorWithTemplate(ctx, bizerror.BizErrCodeConflict,
+		return nil, bizerror.ToGRPCErrorWithTemplate(ctx, errcodes.BizErrCodeTenantAlreadyExists,
 			map[string]any{"reason": req.GetCode()})
 	}
 
@@ -128,7 +130,7 @@ func (s *TenantService) TenantGet(
 		return nil, common.DBError(ctx)
 	}
 	if model == nil {
-		return nil, common.NotFound(ctx)
+		return nil, bizerror.ToGRPCError(ctx, errcodes.BizErrCodeTenantNotFound)
 	}
 
 	info, err := model.ToPB(ctx)
@@ -190,7 +192,7 @@ func (s *TenantService) TenantUpdate(
 		return nil, common.DBError(ctx)
 	}
 	if fresh == nil {
-		return nil, common.NotFound(ctx)
+		return nil, bizerror.ToGRPCError(ctx, errcodes.BizErrCodeTenantNotFound)
 	}
 	info, err := fresh.ToPB(ctx)
 	if err != nil {
@@ -222,9 +224,10 @@ func (s *TenantService) TenantDelete(
 // TenantRetrySync 重试下游同步（动作型接口）
 //
 // 动作型接口的三条约定（协议中心规范第 8.2 节）：
-//   走 POST + 动词短横线路径，不塞进 PUT/PATCH——它不改字段，重复调用也不是幂等覆盖
-//   有自己的 Request/Response，不复用 GetRequest，否则以后加参数没地方放
-//   结果用枚举而不是 bool：动作的结局常常超过两种（待同步/已同步/失败）
+//
+//	走 POST + 动词短横线路径，不塞进 PUT/PATCH——它不改字段，重复调用也不是幂等覆盖
+//	有自己的 Request/Response，不复用 GetRequest，否则以后加参数没地方放
+//	结果用枚举而不是 bool：动作的结局常常超过两种（待同步/已同步/失败）
 //
 // 这里只演示状态流转与返回形态，真实实现应该把同步任务投递到队列，
 // 而不是在 RPC 里同步等外部系统——那会让这个调用的耗时取决于下游
@@ -243,7 +246,28 @@ func (s *TenantService) TenantRetrySync(
 		return nil, common.DBError(ctx)
 	}
 	if model == nil {
-		return nil, common.NotFound(ctx)
+		return nil, bizerror.ToGRPCError(ctx, errcodes.BizErrCodeTenantNotFound)
+	}
+
+	// 冻结的 Tenant 不触发下游同步：协议中心的状态机是 待激活 → 正常 → 冻结，
+	// 冻结表示这个 Tenant 已停止对外活动，把它推给下游只会在对端留下脏数据
+	//
+	// 这里用的是「资源当前状态不满足前置条件」而不是「入参不合法」，所以错误码映射到
+	// FailedPrecondition 而不是 InvalidArgument——请求本身没有任何问题
+	// 它也正是那种不显式 Register 就会变成 500 的码：码值不以 _not_found 结尾，
+	// go-bizerror 的后缀规则接不上，兜底是 Internal
+	//
+	// [EN] A frozen root does not trigger a downstream sync: the hub's state machine runs
+	// pending to normal to frozen, and frozen means this root has stopped operating, so pushing
+	// it downstream only leaves dirty data at the far end. The condition is the resource's
+	// current state rather than a malformed request, so the code maps to FailedPrecondition
+	// rather than InvalidArgument. It is also exactly the kind of code that becomes a 500
+	// without an explicit Register: the value does not end in _not_found, so go-bizerror's
+	// suffix rule does not apply and the fallback is Internal
+	frozen := enumspb.TenantStatus_TENANT_STATUS_FROZEN
+	if model.Status == frozen {
+		return nil, bizerror.ToGRPCErrorWithTemplate(ctx, errcodes.BizErrCodeTenantInvalidStatus,
+			map[string]any{"reason": model.Status.String()})
 	}
 
 	// 已同步成功且未要求强制时直接返回当前状态，不重复触发
@@ -291,7 +315,10 @@ func (s *TenantService) TenantRegionAssign(
 		return nil, common.DBError(ctx)
 	}
 	if parent == nil {
-		return nil, common.NotFound(ctx)
+		// 缺的是父资源，所以报 Tenant 的 not_found，而不是地区分配的
+		// [EN] The parent is what is missing, so this is the root's not-found, not the
+		// assignment's
+		return nil, bizerror.ToGRPCError(ctx, errcodes.BizErrCodeTenantNotFound)
 	}
 
 	if req.GetPrimary() {
@@ -337,7 +364,11 @@ func (s *TenantService) TenantRegionAssignmentUpdate(
 		return nil, common.DBError(ctx)
 	}
 	if current == nil {
-		return nil, common.NotFound(ctx)
+		// 子资源专属 not_found：父存在而子不存在时报父的 not_found，
+		// 调用方会以为自己拿错了父 ID，去查一个其实没问题的东西
+		// [EN] The sub-resource's own not-found: reporting the parent's would make the caller
+		// believe it holds the wrong parent id and debug something that is in fact correct
+		return nil, bizerror.ToGRPCError(ctx, errcodes.BizErrCodeTenantRegionAssignmentNotFound)
 	}
 
 	if req.GetPrimary() != nil && req.GetPrimary().GetValue() {
@@ -354,8 +385,11 @@ func (s *TenantService) TenantRegionAssignmentUpdate(
 	}
 
 	fresh, err := s.repo.Regions.GetByIDScoped(ctx, tenantID, assignmentID)
-	if err != nil || fresh == nil {
+	if err != nil {
 		return nil, common.DBError(ctx)
+	}
+	if fresh == nil {
+		return nil, bizerror.ToGRPCError(ctx, errcodes.BizErrCodeTenantRegionAssignmentNotFound)
 	}
 	pbAssignment, err := fresh.ToPB(ctx)
 	if err != nil {

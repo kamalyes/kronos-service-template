@@ -1,8 +1,8 @@
 /*
  * @Author: kamalyes example@qq.com
- * @Date: 2026-10-31 00:00:00
+ * @Date: 2026-11-01 17:05:08
  * @LastEditors: kamalyes example@qq.com
- * @LastEditTime: 2026-10-31 00:00:00
+ * @LastEditTime: 2026-11-01 19:28:30
  * @FilePath: \kronos-my-service\bootstrap\services.go
  * @Description: 服务初始化和依赖注入
  *
@@ -13,16 +13,16 @@ package bootstrap
 import (
 	"context"
 	"github.com/grpc-ecosystem/grpc-gateway/v2/runtime"
+	gwglobal "github.com/kamalyes/go-rpc-gateway/global"
 	"github.com/kamalyes/kronos-my-service/repository"
 	"github.com/kamalyes/kronos-my-service/service"
-	gwglobal "github.com/kamalyes/go-rpc-gateway/global"
-	"google.golang.org/grpc"
 	catalogsvc "github.com/kamalyes/kronos-my-service/service/catalog"
 	inventorysvc "github.com/kamalyes/kronos-my-service/service/inventory"
 	tenantsvc "github.com/kamalyes/kronos-my-service/service/tenant"
 	pb "github.com/kamalyes/kronos-share-proto-template/pb/catalog"
 	secondpb "github.com/kamalyes/kronos-share-proto-template/pb/inventory"
 	mixedpb "github.com/kamalyes/kronos-share-proto-template/pb/tenant"
+	"google.golang.org/grpc"
 )
 
 // initServices 初始化所有服务

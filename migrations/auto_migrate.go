@@ -1,8 +1,8 @@
 /*
  * @Author: kamalyes example@qq.com
- * @Date: 2026-10-31 00:00:00
+ * @Date: 2026-11-01 17:05:08
  * @LastEditors: kamalyes example@qq.com
- * @LastEditTime: 2026-10-31 00:00:00
+ * @LastEditTime: 2026-11-01 19:28:30
  * @FilePath: \kronos-my-service\migrations\auto_migrate.go
  * @Description: 数据库自动迁移 基于 go-sqlbuilder Migrator
  *
@@ -12,8 +12,8 @@
 package migrations
 
 import (
-	"github.com/kamalyes/kronos-my-service/models"
 	"github.com/kamalyes/go-sqlbuilder/db"
+	"github.com/kamalyes/kronos-my-service/models"
 	"gorm.io/gorm"
 )
 

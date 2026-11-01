@@ -15,13 +15,12 @@ project/
 │   ├── server.go           # Gateway struct, Run(), lifecycle
 │   ├── services.go         # initServices(), registerGRPCServices(), registerHTTPHandlers()
 │   ├── database.go         # initDatabase(), migration trigger
+│   ├── errcodes.go         # registerErrorCodes(), called first in Run()
 │   └── subscriber.go       # Event subscribers (optional)
 ├── constants/          # Service name constants
-├── errors/             # Business error codes + i18n error helpers
-│   ├── codes.go            # BizErrCode* constants
-│   ├── errors.go           # NewI18nError(), NewI18nErrorWithTemplate()
-│   └── grpc.go             # ToGRPCError(), MapBizCodeToGRPCCode()
-├── locales/            # i18n JSON files (zh.json, en.json, etc.)
+├── errcodes/           # THIS service's own business error codes
+│   └── codes.go            # BizErrCode<Entity><Semantics> constants + Mappings()
+├── locales/            # i18n JSON files, 28 of them (zh.json, en.json, ...)
 ├── migrations/         # Database auto-migration
 │   ├── auto_migrate.go     # GetAllModels(), GetAllIndexes(), GetAllComments()
 │   └── migrate.go          # SeedData()
@@ -48,6 +47,7 @@ project/
 | `github.com/kamalyes/go-pbmo` | Proto ↔ Model bidirectional conversion |
 | `github.com/kamalyes/go-config` | Environment config |
 | `github.com/kamalyes/go-toolbox` | ID generation, utilities |
+| `github.com/kamalyes/go-bizerror` | Generic business error codes, i18n errors, status mapping |
 | `{org}/{prefix}-share-proto/pb/*` | Generated proto Go code |
 
 ## Adding a New Entity - Complete Checklist
@@ -232,30 +232,92 @@ Add to `GetAllComments()`:
 },
 ```
 
-### Step 8: Error Codes (`errors/codes.go`)
+### Step 8: Error Codes (`errcodes/codes.go`)
 
-Add entity-specific error codes:
+Two edits, and **both are mandatory**. Only the first one compiles on its own, which is exactly
+why it gets forgotten.
+
+**8a. Declare the constants.** A code's value IS its i18n key. Generic codes live in
+`go-bizerror`; only entity-specific semantics belong here.
+
 ```go
-BizErrCodeXxxNotFound      = "error.xxx_not_found"
-BizErrCodeXxxNameExists    = "error.xxx_name_exists"
-BizErrCodeXxxStatusInvalid = "error.xxx_status_invalid"
+const (
+    BizErrCodeXxxNotFound      = "error.xxx_not_found"
+    BizErrCodeXxxAlreadyExists = "error.xxx_already_exists"
+    BizErrCodeXxxInvalidStatus = "error.xxx_invalid_status"
+)
 ```
+
+**8b. Register each code's mapping in `Mappings()`.**
+
+```go
+BizErrCodeXxxNotFound:      {GRPC: codes.NotFound, Gateway: gwerrors.ErrCodeNotFound},
+BizErrCodeXxxAlreadyExists: {GRPC: codes.AlreadyExists, Gateway: gwerrors.ErrCodeConflict},
+BizErrCodeXxxInvalidStatus: {GRPC: codes.InvalidArgument, Gateway: gwerrors.ErrCodeBadRequest},
+```
+
+`bizerror.Mapping()` resolves a code in exactly three steps: an explicitly registered mapping
+wins; otherwise a code ending in `_not_found` maps to `NotFound`; otherwise **everything falls
+back to `Internal`, i.e. 500**. So a declared-but-unregistered `error.xxx_already_exists`
+answers a uniqueness conflict with a 500, which tells the caller the service is broken and
+invites it to retry a request that can never succeed.
+
+Pick the gRPC code by what is actually wrong:
+
+| Situation | GRPC | Gateway |
+|---|---|---|
+| Resource does not exist | `codes.NotFound` | `ErrCodeNotFound` |
+| Uniqueness conflict | `codes.AlreadyExists` | `ErrCodeConflict` |
+| Request field or enum is invalid | `codes.InvalidArgument` | `ErrCodeBadRequest` |
+| Resource's current state forbids the operation | `codes.FailedPrecondition` | `ErrCodeBadRequest` |
+
+The last two are easy to confuse: an invalid enum **in the request** is `InvalidArgument`, while
+"this resource is frozen so the action is not allowed" is `FailedPrecondition` — nothing is
+wrong with the request there.
+
+Always write the field names (`GRPC:` / `Gateway:`): `go vet`'s composites check rejects unkeyed
+literals of a type from another package, and `go vet ./...` is its own CI step.
+
+Nothing needs wiring: `bootstrap/errcodes.go` calls
+`bizerror.RegisterMany(errcodes.Mappings())` once at the top of `Run()`, before any request can
+arrive, so a new entry in `Mappings()` takes effect on its own.
 
 ### Step 9: Locale Files (`locales/*.json`)
 
-Add error messages to ALL locale files. Example for `zh.json`:
+Add every new key to **all 28** locale files, and keep the key sets exactly equal across them: a
+key missing from one language falls back for that language only, which is the kind of bug that
+shows up solely under a particular `Accept-Language`.
+
+Keys go **under the `error` object without the `error.` prefix**. go-i18n flattens nested
+objects with dots at load time, so `error` + `xxx_not_found` is the code value
+`error.xxx_not_found`. Do not write the dotted key at the top level; it would work, but it would
+no longer match the layout the other 28 files use.
+
+`en.json`:
 ```json
-"error.xxx_not_found": "XXX未找到",
-"error.xxx_name_exists": "XXX名称已存在",
-"error.xxx_status_invalid": "XXX状态无效"
+"error": {
+  "xxx_not_found": "Xxx not found",
+  "xxx_already_exists": "Xxx already exists: {{reason}}",
+  "xxx_invalid_status": "Invalid Xxx status: {{reason}}"
+}
 ```
 
-Example for `en.json`:
+`zh.json`:
 ```json
-"error.xxx_not_found": "XXX not found",
-"error.xxx_name_exists": "XXX name already exists",
-"error.xxx_status_invalid": "XXX status is invalid"
+"error": {
+  "xxx_not_found": "Xxx 不存在",
+  "xxx_already_exists": "Xxx 已存在：{{reason}}",
+  "xxx_invalid_status": "Xxx 状态无效：{{reason}}"
+}
 ```
+
+Template variables use double braces (`{{reason}}`) and pair with
+`ToGRPCErrorWithTemplate(ctx, code, map[string]any{"reason": ...})`. A message that carries a
+placeholder must be resolved through a template-aware function: `GetMsgByKey` does not apply
+templates and hands the literal `{{reason}}` to the caller, so a batch endpoint building
+per-item messages needs `GetMsgWithMap`.
+
+See `locales/CONVENTIONS.md` for the full language list and translation rules.
 
 ### Step 10: gRPC/HTTP Registration (`bootstrap/services.go`)
 
@@ -272,16 +334,50 @@ s.gateway.RegisterGatewayHandler(func(ctx context.Context, mux *runtime.ServeMux
 
 ## Error Handling Pattern
 
-Always use i18n errors in service methods:
+A repository miss returns `(nil, nil)`, not an error, so "the query failed" and "the query found
+nothing" are two different branches and must map to two different codes. Folding them together
+reports a concurrently deleted row as a 500 and sends the caller into a retry loop.
+
 ```go
-func (s *XxxService) GetByID(ctx context.Context, id string) (*models.XxxModel, error) {
-    model, err := s.repo.GetByID(ctx, id)
+func (s *XxxService) XxxGet(ctx context.Context, req *pb.XxxGetRequest) (*pb.XxxGetResponse, error) {
+    model, err := s.repo.GetByIDCached(ctx, tenantID, req.GetXxxId())
     if err != nil {
-        return nil, errors.ToGRPCError(ctx, errors.BizErrCodeXxxNotFound)
+        // 查询本身失败：日志记全文，响应只给错误码
+        gwglobal.LOGGER.ErrorContextKV(ctx, "查询失败", "id", req.GetXxxId(), "error", err)
+        return nil, common.DBError(ctx)
     }
-    return model, nil
+    if model == nil {
+        // 查到了但没有：实体专属 not_found
+        return nil, bizerror.ToGRPCError(ctx, errcodes.BizErrCodeXxxNotFound)
+    }
+    ...
 }
 ```
+
+Uniqueness conflicts carry the offending value back through the template:
+
+```go
+if exists {
+    return nil, bizerror.ToGRPCErrorWithTemplate(ctx, errcodes.BizErrCodeXxxAlreadyExists,
+        map[string]any{"reason": req.GetCode()})
+}
+```
+
+Which code to reach for:
+
+- **`errcodes.BizErrCode<Entity>*`** whenever an entity can be named. The response then carries
+  `error.<entity>_not_found` and the caller can see which resource is missing.
+- **`go-bizerror` builtins** only when nothing entity-specific is involved:
+  `BizErrCodeDatabaseOperationFailed` for an infrastructure failure (via `common.DBError`),
+  `BizErrCodeUnauthenticated` for a missing tenant in the context (via `common.TenantOf`).
+- **Never** the raw underlying error: it can carry table names, SQL fragments or connection
+  strings. The full text goes to the log, the response carries only the code and its localized
+  message.
+
+Enum allowed-values are checked in the business method, not with a `oneof` struct tag: go-argus
+formats a protobuf enum to its name before comparing, so numeric candidates reject valid
+requests. A `validate:"required,max=8"` tag on a repeated enum guarantees only that values were
+sent and how many — `UNSPECIFIED` passes it.
 
 ## ID Generation Pattern
 
@@ -313,11 +409,15 @@ pbNames := models.ConvertI18NNamesToPB(model.I18nNames)
 ## Important Rules
 
 1. **NEVER** skip any step in the checklist - all layers must be consistent
-2. **ALWAYS** add locale entries for new error codes in ALL language files
-3. **ALWAYS** use `errors.ToGRPCError()` for returning errors from service methods
-4. **ALWAYS** use `NewSnowflakeID()` for generating entity IDs
-5. **ALWAYS** match model field names with proto field names for PBMO compatibility
-6. **NEVER** use raw `status.Errorf()` in service code - use the i18n error system
-7. **ALWAYS** add table name constants to `models/table_names.go`
-8. **ALWAYS** register new repositories in `RepositoryFactory`
-9. **ALWAYS** add models to `GetAllModels()` in migrations
+2. **ALWAYS** add locale entries for new error codes in ALL 28 language files, keeping the key
+   sets equal
+3. **ALWAYS** register every new error code in `errcodes.Mappings()`; a code that is declared
+   but not registered answers 500 unless it ends in `_not_found`
+4. **ALWAYS** use `bizerror.ToGRPCError()` / `ToGRPCErrorWithTemplate()` for returning errors
+   from service methods, with an `errcodes` code whenever an entity can be named
+5. **ALWAYS** use `NewSnowflakeID()` for generating entity IDs
+6. **ALWAYS** match model field names with proto field names for PBMO compatibility
+7. **NEVER** use raw `status.Errorf()` in service code - use the i18n error system
+8. **ALWAYS** add table name constants to `models/table_names.go`
+9. **ALWAYS** register new repositories in `RepositoryFactory`
+10. **ALWAYS** add models to `GetAllModels()` in migrations

@@ -1,8 +1,8 @@
 /*
  * @Author: kamalyes example@qq.com
- * @Date: 2026-10-31 00:00:00
+ * @Date: 2026-11-01 17:05:08
  * @LastEditors: kamalyes example@qq.com
- * @LastEditTime: 2026-10-31 00:00:00
+ * @LastEditTime: 2026-11-01 19:28:30
  * @FilePath: \kronos-my-service\bootstrap\idgen.go
  * @Description: ID 中心分发器装配 —— 服务间 gRPC 调用的真实用例
  *
@@ -14,11 +14,11 @@ import (
 	"context"
 	"fmt"
 
+	gwglobal "github.com/kamalyes/go-rpc-gateway/global"
 	"github.com/kamalyes/kronos-my-service/constants"
 	"github.com/kamalyes/kronos-my-service/models"
 	"github.com/kamalyes/kronos-my-service/service/common"
 	keypb "github.com/kamalyes/kronos-share-proto-template/pb/key"
-	gwglobal "github.com/kamalyes/go-rpc-gateway/global"
 )
 
 // initIDDispenser 把 ID 号段分发接到中心发号服务
@@ -31,8 +31,8 @@ import (
 // Deployment 的 Pod 名是 myapp-7d9f8b-x4k2p 这种随机后缀，提取不出序号，
 // 于是落到 sha256(hostname) % 1024 再 % 32，副本一多就是生日碰撞：
 //
-//    2 个副本  3.1%     8 个副本 61.4%
-//    4 个副本 17.7%    16 个副本 99.0%
+//	2 个副本  3.1%     8 个副本 61.4%
+//	4 个副本 17.7%    16 个副本 99.0%
 //
 // 两个 Pod 拿到同一个 worker id，各有独立序列计数器，同一毫秒发出相同 ID，
 // 表现为偶发主键冲突——与流量相关、重启后碰撞组合还会变，极难排查。

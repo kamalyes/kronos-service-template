@@ -1,8 +1,8 @@
 /*
  * @Author: kamalyes example@qq.com
- * @Date: 2026-10-31 00:00:00
+ * @Date: 2026-11-01 17:05:08
  * @LastEditors: kamalyes 501893067@qq.com
- * @LastEditTime: 2026-10-31 00:00:00
+ * @LastEditTime: 2026-11-01 19:28:30
  * @FilePath: \kronos-my-service\bootstrap\server.go
  * @Description: 服务启动引导，初始化并启动gRPC和HTTP网关服务
  *
@@ -13,12 +13,12 @@ package bootstrap
 import (
 	"fmt"
 	gruntime "github.com/grpc-ecosystem/grpc-gateway/v2/runtime"
-	"github.com/kamalyes/kronos-my-service/constants"
-	"github.com/kamalyes/kronos-my-service/repository"
-	"github.com/kamalyes/kronos-my-service/service"
 	goconfig "github.com/kamalyes/go-config"
 	gateway "github.com/kamalyes/go-rpc-gateway"
 	gwglobal "github.com/kamalyes/go-rpc-gateway/global"
+	"github.com/kamalyes/kronos-my-service/constants"
+	"github.com/kamalyes/kronos-my-service/repository"
+	"github.com/kamalyes/kronos-my-service/service"
 	catalogsvc "github.com/kamalyes/kronos-my-service/service/catalog"
 	inventorysvc "github.com/kamalyes/kronos-my-service/service/inventory"
 	tenantsvc "github.com/kamalyes/kronos-my-service/service/tenant"
@@ -30,9 +30,9 @@ type MyServiceGateway struct {
 	repo    *repository.RepositoryFactory
 	svc     *service.MyServiceServiceImpl
 	// exampleSvc 实现协议中心的 ProductServiceServer
-	exampleSvc *catalogsvc.ProductService
-	secondSvc  *inventorysvc.WarehouseService
-	mixedSvc   *tenantsvc.TenantService
+	exampleSvc     *catalogsvc.ProductService
+	secondSvc      *inventorysvc.WarehouseService
+	mixedSvc       *tenantsvc.TenantService
 	mixedMemberSvc *tenantsvc.TenantMemberService
 }
 
@@ -67,6 +67,15 @@ func (s *MyServiceGateway) Run() error {
 		return fmt.Errorf("create gateway failed: %v", err)
 	}
 	s.gateway = gw
+
+	// 错误码映射第一件事就注册：它是一张纯静态表，不依赖后面任何一个阶段，
+	// 而排在后面则意味着在它之前出错的阶段只能拿到兜底的 500
+	// 为什么不写成 errcodes 包的 init()，见 bootstrap/errcodes.go
+	// [EN] Registered first: a static table depending on none of the later stages, which
+	// would otherwise only get the 500 fallback if they failed. errcodes.go explains why
+	// this is not an init() in the errcodes package
+	gwglobal.LOGGER.Info("Registering business error codes...")
+	registerErrorCodes()
 
 	gwglobal.LOGGER.Info("Initializing database...")
 	if err := s.initDatabase(); err != nil {

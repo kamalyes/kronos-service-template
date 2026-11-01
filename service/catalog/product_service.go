@@ -1,8 +1,8 @@
 /*
  * @Author: kamalyes example@qq.com
- * @Date: 2026-10-31 00:00:00
+ * @Date: 2026-11-01 17:05:08
  * @LastEditors: kamalyes example@qq.com
- * @LastEditTime: 2026-10-31 00:00:00
+ * @LastEditTime: 2026-11-01 19:28:30
  * @FilePath: \kronos-my-service\service\catalog\product_service.go
  * @Description: Product 业务逻辑层，实现协议中心的 ProductServiceServer
  *
@@ -13,17 +13,18 @@ package catalog
 import (
 	"context"
 
-	"github.com/kamalyes/kronos-my-service/models"
-	"github.com/kamalyes/kronos-my-service/service/common"
-	"github.com/kamalyes/kronos-my-service/repository"
-	pb "github.com/kamalyes/kronos-share-proto-template/pb/catalog"
-	commonpb "github.com/kamalyes/kronos-share-proto-template/pb/common"
-	enumspb "github.com/kamalyes/kronos-share-proto-template/pb/enums"
 	bizerror "github.com/kamalyes/go-bizerror"
 	pbmo "github.com/kamalyes/go-pbmo"
 	gwglobal "github.com/kamalyes/go-rpc-gateway/global"
 	gwmiddleware "github.com/kamalyes/go-rpc-gateway/middleware"
 	sqltypes "github.com/kamalyes/go-sqlbuilder/types"
+	"github.com/kamalyes/kronos-my-service/errcodes"
+	"github.com/kamalyes/kronos-my-service/models"
+	"github.com/kamalyes/kronos-my-service/repository"
+	"github.com/kamalyes/kronos-my-service/service/common"
+	pb "github.com/kamalyes/kronos-share-proto-template/pb/catalog"
+	commonpb "github.com/kamalyes/kronos-share-proto-template/pb/common"
+	enumspb "github.com/kamalyes/kronos-share-proto-template/pb/enums"
 )
 
 // ProductService 实现协议中心 pb.ProductServiceServer
@@ -71,10 +72,16 @@ func (s *ProductService) ProductCreate(
 		return nil, common.DBError(ctx)
 	}
 	if exists {
-		// 带 {reason} 模板的错误码：文案由 go-bizerror 按请求语言渲染，
-		// 这里只提供原因，不拼人类可读的句子
-		// [EN] A templated code: go-bizerror renders the message in the request language
-		return nil, bizerror.ToGRPCErrorWithTemplate(ctx, bizerror.BizErrCodeConflict,
+		// 用实体专属码而不是通用的 BizErrCodeConflict：通用码只说「冲突了」，
+		// 调用方还得猜是哪个实体的哪个字段撞了，而它要据此决定是换个编码重试
+		// 还是提示用户改输入带 {reason} 模板把重复的那个值一并带回，
+		// 文案由 go-bizerror 按请求语言渲染，这里不拼人类可读的句子
+		// [EN] The entity's own code rather than the generic conflict: the generic one says only
+		// that something collided and leaves the caller guessing which entity and field, when
+		// that is exactly what it needs in order to choose between retrying with another code
+		// and asking the user to change the input. The templated code carries the duplicate
+		// value back, and go-bizerror renders the message in the request language
+		return nil, bizerror.ToGRPCErrorWithTemplate(ctx, errcodes.BizErrCodeProductAlreadyExists,
 			map[string]any{"reason": req.GetCode()})
 	}
 
@@ -118,7 +125,11 @@ func (s *ProductService) ProductGet(
 		return nil, common.DBError(ctx)
 	}
 	if model == nil {
-		return nil, common.NotFound(ctx)
+		// 实体专属 not_found：码值以 _not_found 结尾，go-bizerror 的后缀规则
+		// 本就能映射成 NotFound，errcodes.Mappings 里仍然逐条登记，理由见那里
+		// [EN] The entity's own not-found. Its value ends in _not_found, which go-bizerror's
+		// suffix rule already maps to NotFound; Mappings lists it anyway and explains why
+		return nil, bizerror.ToGRPCError(ctx, errcodes.BizErrCodeProductNotFound)
 	}
 
 	info, err := model.ToPB(ctx)
@@ -182,7 +193,7 @@ func (s *ProductService) ProductUpdate(
 		return nil, common.DBError(ctx)
 	}
 	if model == nil {
-		return nil, common.NotFound(ctx)
+		return nil, bizerror.ToGRPCError(ctx, errcodes.BizErrCodeProductNotFound)
 	}
 
 	builder := pbmo.NewUpdates().
@@ -214,9 +225,16 @@ func (s *ProductService) ProductUpdate(
 		gwglobal.LOGGER.InfoContextKV(ctx, "更新成功", "id", id, "fields", len(updates))
 	}
 
+	// 读回失败与「行不见了」分开判：并成一条的话，被并发删掉的记录会报成
+	// 数据库错误（500），调用方于是去重试一个永远不会成功的请求
+	// [EN] Split from the error branch: folded together, a row deleted concurrently reports as
+	// a database error (500) and the caller retries a request that can never succeed
 	fresh, err := s.repo.GetByIDCached(ctx, tenantID, id)
-	if err != nil || fresh == nil {
+	if err != nil {
 		return nil, common.DBError(ctx)
+	}
+	if fresh == nil {
+		return nil, bizerror.ToGRPCError(ctx, errcodes.BizErrCodeProductNotFound)
 	}
 	info, err := fresh.ToPB(ctx)
 	if err != nil {
@@ -239,8 +257,8 @@ func (s *ProductService) ProductUpdateStatus(
 	// （协议中心的 proto 规范第 7 节写了这条）
 	// [EN] Allowed enum values are checked here rather than with oneof-style tags
 	if req.GetStatus() == enumspb.CommonStatus_COMMON_STATUS_UNSPECIFIED {
-		return nil, bizerror.ToGRPCErrorWithTemplate(ctx, bizerror.BizErrCodeInvalidParameter,
-			map[string]any{"reason": "status"})
+		return nil, bizerror.ToGRPCErrorWithTemplate(ctx, errcodes.BizErrCodeProductInvalidStatus,
+			map[string]any{"reason": req.GetStatus().String()})
 	}
 
 	id := req.GetProductId()
@@ -296,8 +314,8 @@ func (s *ProductService) ProductBatchDelete(
 		if err := s.repo.DeleteScoped(ctx, tenantID, id); err != nil {
 			failed++
 			results = append(results, &commonpb.BatchResult{
-				Id:      id,
-				Success: false,
+				Id:           id,
+				Success:      false,
 				ErrorMessage: gwmiddleware.GetMsgByKey(ctx, bizerror.BizErrCodeDatabaseOperationFailed),
 			})
 			continue

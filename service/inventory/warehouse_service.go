@@ -1,8 +1,8 @@
 /*
  * @Author: kamalyes example@qq.com
- * @Date: 2026-10-31 00:00:00
+ * @Date: 2026-11-01 17:05:08
  * @LastEditors: kamalyes example@qq.com
- * @LastEditTime: 2026-10-31 00:00:00
+ * @LastEditTime: 2026-11-01 19:28:30
  * @FilePath: \kronos-my-service\service\inventory\warehouse_service.go
  * @Description: Warehouse 业务逻辑层，实现协议中心的 WarehouseServiceServer
  *
@@ -13,15 +13,16 @@ package inventory
 import (
 	"context"
 
-	"github.com/kamalyes/kronos-my-service/models"
-	"github.com/kamalyes/kronos-my-service/service/common"
-	"github.com/kamalyes/kronos-my-service/repository"
-	pb "github.com/kamalyes/kronos-share-proto-template/pb/inventory"
-	commonpb "github.com/kamalyes/kronos-share-proto-template/pb/common"
-	enumspb "github.com/kamalyes/kronos-share-proto-template/pb/enums"
 	bizerror "github.com/kamalyes/go-bizerror"
 	pbmo "github.com/kamalyes/go-pbmo"
 	gwglobal "github.com/kamalyes/go-rpc-gateway/global"
+	"github.com/kamalyes/kronos-my-service/errcodes"
+	"github.com/kamalyes/kronos-my-service/models"
+	"github.com/kamalyes/kronos-my-service/repository"
+	"github.com/kamalyes/kronos-my-service/service/common"
+	commonpb "github.com/kamalyes/kronos-share-proto-template/pb/common"
+	enumspb "github.com/kamalyes/kronos-share-proto-template/pb/enums"
+	pb "github.com/kamalyes/kronos-share-proto-template/pb/inventory"
 )
 
 // WarehouseService 实现协议中心 pb.WarehouseServiceServer
@@ -61,7 +62,7 @@ func (s *WarehouseService) WarehouseCreate(
 		return nil, common.DBError(ctx)
 	}
 	if exists {
-		return nil, bizerror.ToGRPCErrorWithTemplate(ctx, bizerror.BizErrCodeConflict,
+		return nil, bizerror.ToGRPCErrorWithTemplate(ctx, errcodes.BizErrCodeWarehouseAlreadyExists,
 			map[string]any{"reason": req.GetCode()})
 	}
 
@@ -106,7 +107,7 @@ func (s *WarehouseService) WarehouseGet(
 		return nil, common.DBError(ctx)
 	}
 	if model == nil {
-		return nil, common.NotFound(ctx)
+		return nil, bizerror.ToGRPCError(ctx, errcodes.BizErrCodeWarehouseNotFound)
 	}
 
 	info, err := model.ToPB(ctx)
@@ -180,7 +181,7 @@ func (s *WarehouseService) WarehouseUpdate(
 		return nil, common.DBError(ctx)
 	}
 	if fresh == nil {
-		return nil, common.NotFound(ctx)
+		return nil, bizerror.ToGRPCError(ctx, errcodes.BizErrCodeWarehouseNotFound)
 	}
 	common.RefreshKV(ctx, fresh)
 
@@ -201,8 +202,8 @@ func (s *WarehouseService) WarehouseUpdateStatus(
 	}
 
 	if req.GetStatus() == enumspb.CommonStatus_COMMON_STATUS_UNSPECIFIED {
-		return nil, bizerror.ToGRPCErrorWithTemplate(ctx, bizerror.BizErrCodeInvalidParameter,
-			map[string]any{"reason": "status"})
+		return nil, bizerror.ToGRPCErrorWithTemplate(ctx, errcodes.BizErrCodeWarehouseInvalidStatus,
+			map[string]any{"reason": req.GetStatus().String()})
 	}
 
 	id := req.GetWarehouseId()

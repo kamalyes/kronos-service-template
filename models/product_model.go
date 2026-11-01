@@ -1,8 +1,8 @@
 /*
  * @Author: kamalyes example@qq.com
- * @Date: 2026-10-31 00:00:00
+ * @Date: 2026-11-01 17:05:08
  * @LastEditors: kamalyes example@qq.com
- * @LastEditTime: 2026-10-31 00:00:00
+ * @LastEditTime: 2026-11-01 19:28:30
  * @FilePath: \kronos-my-service\models\product_model.go
  * @Description: Product 数据模型，字段与协议中心的 ProductInfo 对齐
  *
@@ -14,11 +14,11 @@ import (
 	"context"
 	"time"
 
-	commonpb "github.com/kamalyes/kronos-share-proto-template/pb/common"
-	enumspb "github.com/kamalyes/kronos-share-proto-template/pb/enums"
 	bizerror "github.com/kamalyes/go-bizerror"
 	sqlbuilder "github.com/kamalyes/go-sqlbuilder"
 	sqltypes "github.com/kamalyes/go-sqlbuilder/types"
+	commonpb "github.com/kamalyes/kronos-share-proto-template/pb/common"
+	enumspb "github.com/kamalyes/kronos-share-proto-template/pb/enums"
 )
 
 // ProductModel 对应协议中心 common.ProductInfo 的落库形态
@@ -28,10 +28,11 @@ import (
 // time.Time ↔ *timestamppb.Timestamp（pbmo 内建该方向的转换）。
 //
 // 三个 JSON 列的类型两侧不同构，pbmo 的字段计划配不上，由 ToPB / ApplyPB 显式处理：
-//   Contact  PB 是 *commonpb.ProductContact，落库用 types.ProtoJSON 包一层
-//            （ProtoJSON 只在 go-sqlbuilder/types 子包，根包未重导出，故单独 import）
-//   Tags     PB 是 []string，落库用 StringSlice（命名切片，自带 Valuer/Scanner）
-//   Extra    PB 是 map[string]string，落库用 JSON[map[string]string]
+//
+//	Contact  PB 是 *commonpb.ProductContact，落库用 types.ProtoJSON 包一层
+//	         （ProtoJSON 只在 go-sqlbuilder/types 子包，根包未重导出，故单独 import）
+//	Tags     PB 是 []string，落库用 StringSlice（命名切片，自带 Valuer/Scanner）
+//	Extra    PB 是 map[string]string，落库用 JSON[map[string]string]
 //
 // [EN] Field names mirror the PB side so pbmo pairs them automatically (case-insensitive);
 // adding a field means naming it the same on both sides, with no hand-written assignment.
@@ -52,8 +53,8 @@ type ProductModel struct {
 	Status enumspb.CommonStatus `gorm:"column:status;type:int;default:0;not null;index:idx_products_status;comment:状态" json:"status"`
 
 	Contact sqltypes.ProtoJSON[*commonpb.ProductContact] `gorm:"column:contact;type:json;comment:联系方式" json:"contact"`
-	Tags    sqlbuilder.StringSlice                                       `gorm:"column:tags;type:json;comment:标签列表" json:"tags"`
-	Extra   sqlbuilder.JSON[map[string]string]                           `gorm:"column:extra;type:json;comment:扩展字段" json:"extra"`
+	Tags    sqlbuilder.StringSlice                       `gorm:"column:tags;type:json;comment:标签列表" json:"tags"`
+	Extra   sqlbuilder.JSON[map[string]string]           `gorm:"column:extra;type:json;comment:扩展字段" json:"extra"`
 
 	CreatedAt time.Time `gorm:"column:created_at;autoCreateTime;comment:创建时间" json:"created_at"`
 	UpdatedAt time.Time `gorm:"column:updated_at;autoUpdateTime;comment:更新时间" json:"updated_at"`

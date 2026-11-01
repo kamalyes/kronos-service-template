@@ -1,8 +1,8 @@
 /*
  * @Author: kamalyes example@qq.com
- * @Date: 2026-10-31 00:00:00
+ * @Date: 2026-11-01 17:05:08
  * @LastEditors: kamalyes example@qq.com
- * @LastEditTime: 2026-10-31 00:00:00
+ * @LastEditTime: 2026-11-01 19:28:30
  * @FilePath: \kronos-my-service\models\tenant_model.go
  * @Description: Tenant 聚合根与子资源模型
  *
@@ -14,9 +14,9 @@ import (
 	"context"
 	"time"
 
+	bizerror "github.com/kamalyes/go-bizerror"
 	commonpb "github.com/kamalyes/kronos-share-proto-template/pb/common"
 	enumspb "github.com/kamalyes/kronos-share-proto-template/pb/enums"
-	bizerror "github.com/kamalyes/go-bizerror"
 )
 
 // TenantModel 对应协议中心 common.TenantInfo
@@ -25,7 +25,7 @@ import (
 //
 //  1. 它自己就是租户，没有 tenant_id 列，code 是**全局唯一**而非租户内唯一。
 //     所以它不能套用 CachedRepository 那套「按 tenant_id 过滤」的方法——
-//     那前提在这里不成立，硬套会写出 WHERE tenant_id = '' 这种恒不命中的条件。
+//     那前提在这里不成立，硬套会写出 WHERE tenant_id = ” 这种恒不命中的条件。
 //  2. member_count 是聚合统计，不落列：成员数会随成员表变化，落成列就要在每次
 //     增删成员时同步维护，漏一处就长期对不上。改为查询时用子查询算（见仓库的
 //     AddComputedField），代价是多一次子查询，换来的是不会出现脏计数。
@@ -41,13 +41,13 @@ import (
 // create/update/delete, so it is a separate table rather than a JSON column: anything that
 // needs addressing individually gets a table, read-only attached data gets JSON.
 type TenantModel struct {
-	Id         string `gorm:"column:id;type:varchar(36);primaryKey;comment:主键ID" json:"id"`
-	Code       string `gorm:"column:code;type:varchar(32);not null;uniqueIndex:uk_tenants_code;comment:编码（全局唯一）" json:"code"`
-	Name       string `gorm:"column:name;type:varchar(64);not null;comment:名称" json:"name"`
+	Id         string                  `gorm:"column:id;type:varchar(36);primaryKey;comment:主键ID" json:"id"`
+	Code       string                  `gorm:"column:code;type:varchar(32);not null;uniqueIndex:uk_tenants_code;comment:编码（全局唯一）" json:"code"`
+	Name       string                  `gorm:"column:name;type:varchar(64);not null;comment:名称" json:"name"`
 	Status     enumspb.TenantStatus    `gorm:"column:status;type:int;default:0;not null;index:idx_tenants_status;comment:状态" json:"status"`
 	SyncState  enumspb.TenantSyncState `gorm:"column:sync_state;type:int;default:0;not null;comment:下游同步状态" json:"sync_state"`
-	PlatformId string `gorm:"column:platform_id;type:varchar(36);not null;comment:平台ID" json:"platform_id"`
-	RegionId   string `gorm:"column:region_id;type:varchar(36);comment:主地区ID" json:"region_id"`
+	PlatformId string                  `gorm:"column:platform_id;type:varchar(36);not null;comment:平台ID" json:"platform_id"`
+	RegionId   string                  `gorm:"column:region_id;type:varchar(36);comment:主地区ID" json:"region_id"`
 
 	// MemberCount 不落列，由查询时的子查询填充（gorm:"-" 排除出表结构）
 	// [EN] Not a column; filled by a subquery at query time

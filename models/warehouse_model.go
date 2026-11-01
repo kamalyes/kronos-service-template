@@ -1,8 +1,8 @@
 /*
  * @Author: kamalyes example@qq.com
- * @Date: 2026-10-31 00:00:00
+ * @Date: 2026-11-01 17:05:08
  * @LastEditors: kamalyes example@qq.com
- * @LastEditTime: 2026-10-31 00:00:00
+ * @LastEditTime: 2026-11-01 19:28:30
  * @FilePath: \kronos-my-service\models\warehouse_model.go
  * @Description: Warehouse 数据模型，字段与协议中心的 WarehouseInfo 对齐
  *
@@ -14,9 +14,9 @@ import (
 	"context"
 	"time"
 
+	bizerror "github.com/kamalyes/go-bizerror"
 	commonpb "github.com/kamalyes/kronos-share-proto-template/pb/common"
 	enumspb "github.com/kamalyes/kronos-share-proto-template/pb/enums"
-	bizerror "github.com/kamalyes/go-bizerror"
 )
 
 // WarehouseModel 对应协议中心 common.WarehouseInfo
@@ -29,16 +29,16 @@ import (
 // every field is structurally identical across the boundary and ToPB defers entirely to pbmo
 // with nothing to fill in by hand. That is the common case; the other model is the exception.
 type WarehouseModel struct {
-	Id        string    `gorm:"column:id;type:varchar(36);primaryKey;comment:主键ID" json:"id"`
-	TenantId  string    `gorm:"column:tenant_id;type:varchar(36);not null;index:idx_warehouses_tenant;comment:租户ID" json:"tenant_id"`
-	Name      string    `gorm:"column:name;type:varchar(64);not null;comment:名称" json:"name"`
-	Code      string    `gorm:"column:code;type:varchar(32);not null;comment:编码" json:"code"`
-	IconUrl   string    `gorm:"column:icon_url;type:varchar(512);comment:图标地址" json:"icon_url"`
+	Id        string                    `gorm:"column:id;type:varchar(36);primaryKey;comment:主键ID" json:"id"`
+	TenantId  string                    `gorm:"column:tenant_id;type:varchar(36);not null;index:idx_warehouses_tenant;comment:租户ID" json:"tenant_id"`
+	Name      string                    `gorm:"column:name;type:varchar(64);not null;comment:名称" json:"name"`
+	Code      string                    `gorm:"column:code;type:varchar(32);not null;comment:编码" json:"code"`
+	IconUrl   string                    `gorm:"column:icon_url;type:varchar(512);comment:图标地址" json:"icon_url"`
 	Category  enumspb.WarehouseCategory `gorm:"column:category;type:int;default:0;not null;comment:分类" json:"category"`
-	Status    enumspb.CommonStatus `gorm:"column:status;type:int;default:0;not null;index:idx_warehouses_status;comment:状态" json:"status"`
-	SortOrder int32     `gorm:"column:sort_order;type:int;default:0;not null;comment:排序序号" json:"sort_order"`
-	CreatedAt time.Time `gorm:"column:created_at;autoCreateTime;comment:创建时间" json:"created_at"`
-	UpdatedAt time.Time `gorm:"column:updated_at;autoUpdateTime;comment:更新时间" json:"updated_at"`
+	Status    enumspb.CommonStatus      `gorm:"column:status;type:int;default:0;not null;index:idx_warehouses_status;comment:状态" json:"status"`
+	SortOrder int32                     `gorm:"column:sort_order;type:int;default:0;not null;comment:排序序号" json:"sort_order"`
+	CreatedAt time.Time                 `gorm:"column:created_at;autoCreateTime;comment:创建时间" json:"created_at"`
+	UpdatedAt time.Time                 `gorm:"column:updated_at;autoUpdateTime;comment:更新时间" json:"updated_at"`
 }
 
 // TableName 指定表名

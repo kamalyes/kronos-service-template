@@ -1,8 +1,8 @@
 /*
  * @Author: kamalyes example@qq.com
- * @Date: 2026-10-31 00:00:00
+ * @Date: 2026-11-01 17:05:08
  * @LastEditors: kamalyes 501893067@qq.com
- * @LastEditTime: 2026-10-31 00:00:00
+ * @LastEditTime: 2026-11-01 19:28:30
  * @FilePath: \kronos-my-service\models\base.go
  * @Description: 模型基础类型定义，提供通用数据类型和工具方法
  *
@@ -14,9 +14,9 @@ package models
 import (
 	"database/sql/driver"
 
-	commonpb "github.com/kamalyes/kronos-share-proto-template/pb/common"
 	"github.com/kamalyes/go-pbmo"
 	sqlbuilder "github.com/kamalyes/go-sqlbuilder"
+	commonpb "github.com/kamalyes/kronos-share-proto-template/pb/common"
 )
 
 // BuildPagination 构建分页响应

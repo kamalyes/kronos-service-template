@@ -1,8 +1,8 @@
 /*
  * @Author: kamalyes example@qq.com
- * @Date: 2026-10-31 00:00:00
+ * @Date: 2026-11-01 17:05:08
  * @LastEditors: kamalyes example@qq.com
- * @LastEditTime: 2026-10-31 00:00:00
+ * @LastEditTime: 2026-11-01 19:28:30
  * @FilePath: \kronos-my-service\bootstrap\kvcache.go
  * @Description: 注册 go-cachex 缓存（字段级 KV + 整实例）
  *
@@ -11,9 +11,9 @@
 package bootstrap
 
 import (
+	"context"
 	cachex "github.com/kamalyes/go-cachex"
 	gwglobal "github.com/kamalyes/go-rpc-gateway/global"
-	"context"
 
 	"github.com/kamalyes/kronos-my-service/constants"
 	"github.com/kamalyes/kronos-my-service/models"
@@ -26,20 +26,22 @@ import (
 // ============================================================================
 //
 // ModelKVCache（字段级，NewModelKV）：缓存「主键 → 某个字段」，如 id→name、id→code。
-//   专治列表接口的 N+1 回显：拿到一页 100 条记录里的 100 个 tenant_id，
-//   要显示租户名，不缓存就是 100 次查询或一次 IN 查询加一轮拼装。
-//   读用 GetFieldMany(ctx, "Name", ids) 一次拿回 map[id]name。
 //
-//   代价：每个缓存字段都注册了一个全量 loader，到 KVCacheRefreshInterval 就
-//   SELECT 整张表重建本地映射。所以只给「有界的字典表」注册——租户、仓库、
-//   分类这种总量可控的。给会无限增长的业务表注册，等于每隔几分钟扫一次大表。
+//	专治列表接口的 N+1 回显：拿到一页 100 条记录里的 100 个 tenant_id，
+//	要显示租户名，不缓存就是 100 次查询或一次 IN 查询加一轮拼装。
+//	读用 GetFieldMany(ctx, "Name", ids) 一次拿回 map[id]name。
+//
+//	代价：每个缓存字段都注册了一个全量 loader，到 KVCacheRefreshInterval 就
+//	SELECT 整张表重建本地映射。所以只给「有界的字典表」注册——租户、仓库、
+//	分类这种总量可控的。给会无限增长的业务表注册，等于每隔几分钟扫一次大表。
 //
 // ModelCache（整实例，NewModelCache）：缓存「复合业务键 → 整条记录」。
-//   读走本地 → Redis Hash → 按键精准回源 DB 三层兜底，不做全表加载，
-//   所以对大表也安全。适合「按 (tenant_id, id) 取整条配置/实体」这类热点单条读。
 //
-//   代价：本地那层只有 TTL 淘汰，没有条数上限。键空间极大的表会把内存吃掉，
-//   这种场景要么别缓存整实例，要么把 TTL 压短。
+//	读走本地 → Redis Hash → 按键精准回源 DB 三层兜底，不做全表加载，
+//	所以对大表也安全。适合「按 (tenant_id, id) 取整条配置/实体」这类热点单条读。
+//
+//	代价：本地那层只有 TTL 淘汰，没有条数上限。键空间极大的表会把内存吃掉，
+//	这种场景要么别缓存整实例，要么把 TTL 压短。
 //
 // 两者都带写后失效广播：Set/Delete 会通过 PubSub 通知其他副本删本地缓存。
 // 这是自己用 map 做本地缓存最容易漏的一环——单副本测不出来，
@@ -193,7 +195,7 @@ func (s *MyServiceGateway) registerKvCache() {
 	// 只影响带全量 loader 的缓存（ModelKV 的字段缓存、上面那个反向索引）。
 	// ModelCache 注册时 loader 是 nil，是按需回源的，会被安静跳过。
 	//
-    // 超时要留足：预热会把每张注册过的表扫一遍。超时了只是预热不完整
+	// 超时要留足：预热会把每张注册过的表扫一遍。超时了只是预热不完整
 	// （缓存退化成按需加载），不影响启动，所以这里不处理返回值。
 	//
 	// [EN] Without warmup, Redis may still hold data from the previous release while the local
