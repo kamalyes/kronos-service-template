@@ -46,7 +46,7 @@ import (
 <%- if eq .GenerateExample "true" %>
 	secondpb "<% .ShareProtoModule %>/pb/<% .SecondModule %>"
 <%- end %>
-	gwconfig "github.com/kamalyes/go-config/pkg/gateway"
+	gwconfig "github.com/kamalyes/go-rpc-gateway/config/core"
 	grpcpool "github.com/kamalyes/go-rpc-gateway/cpool/grpc"
 	gwconstants "github.com/kamalyes/go-rpc-gateway/constants"
 	gwglobal "github.com/kamalyes/go-rpc-gateway/global"

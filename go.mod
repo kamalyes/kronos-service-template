@@ -3,18 +3,15 @@ module github.com/<% .OrgName %>/<% .ProjectName %>
 go <% .GoVersion %>
 
 require (
-	github.com/grpc-ecosystem/grpc-gateway/v2 v2.29.0
-	github.com/kamalyes/go-bizerror v0.0.0-20260814173213-9f68830eaadf
-	github.com/kamalyes/go-config v0.23.0
-	github.com/kamalyes/go-i18n v0.2.8
-	github.com/kamalyes/go-logger v0.7.1
-	github.com/kamalyes/go-pbmo v0.2.1
-	github.com/kamalyes/go-rpc-gateway v1.9.6
-	github.com/kamalyes/go-sqlbuilder v0.7.0
-	github.com/kamalyes/go-toolbox v0.16.3
-	google.golang.org/grpc v1.80.0
-	google.golang.org/protobuf v1.36.11
-	gorm.io/gorm v1.31.1
+	github.com/grpc-ecosystem/grpc-gateway/v2 v2.30.0
+	github.com/kamalyes/go-cachex v0.6.0
+	github.com/kamalyes/go-rpc-gateway v1.10.2-0.20261108113725-d288a36ccd0b
+	github.com/kamalyes/go-sqlbuilder v0.9.0
+	github.com/kamalyes/go-toolbox v0.19.4
+	github.com/kamalyes/go-toolbox/pkg/pbmo v0.19.4
+	google.golang.org/grpc v1.84.0
+	google.golang.org/protobuf v1.36.12
+	gorm.io/gorm v1.31.2
 )
 
 // 这里故意不写协议中心的 require：由 scripts/init.sh 执行 go get 时自动加上

@@ -17,7 +17,8 @@ import (
 
 	commonpb "<% .ShareProtoModule %>/pb/common"
 	enumspb "<% .ShareProtoModule %>/pb/enums"
-	bizerror "github.com/kamalyes/go-bizerror"
+	gwerrors "github.com/kamalyes/go-rpc-gateway/errors"
+	pbmo "github.com/kamalyes/go-toolbox/pkg/pbmo"
 )
 
 // <% .MixedService %>Model 对应协议中心 common.<% .MixedService %>Info
@@ -74,12 +75,12 @@ func (<% .MixedService %>Model) TableComment() string {
 // [EN] regions is filled by the caller on demand: the list endpoint does not fetch the
 // sub-resource (N+1), only the detail endpoint does
 func (m *<% .MixedService %>Model) ToPB(ctx context.Context) (*commonpb.<% .MixedService %>Info, error) {
-	return bizerror.ToPB[<% .MixedService %>Model, commonpb.<% .MixedService %>Info](ctx, m)
+	return gwerrors.Convert(ctx, m, pbmo.ToPB[<% .MixedService %>Model, commonpb.<% .MixedService %>Info])
 }
 
 // ToPBs<% .MixedService %> 批量转换
 func ToPBs<% .MixedService %>(ctx context.Context, items []*<% .MixedService %>Model) ([]*commonpb.<% .MixedService %>Info, error) {
-	return bizerror.ToPBs[<% .MixedService %>Model, commonpb.<% .MixedService %>Info](ctx, items)
+	return gwerrors.ConvertSlice(ctx, items, pbmo.ToPBs[<% .MixedService %>Model, commonpb.<% .MixedService %>Info])
 }
 
 // <% .MixedService %>RegionAssignmentModel 地区分配，<% .MixedService %> 的子资源
@@ -120,7 +121,7 @@ func (m *<% .MixedService %>RegionAssignmentModel) GetTenantID() string { return
 // [EN] IsPrimary and primary do not match by name, so the value is assigned explicitly here;
 // declaring WithFieldMapping at registration works equally well
 func (m *<% .MixedService %>RegionAssignmentModel) ToPB(ctx context.Context) (*commonpb.<% .MixedService %>RegionAssignment, error) {
-	pb, err := bizerror.ToPB[<% .MixedService %>RegionAssignmentModel, commonpb.<% .MixedService %>RegionAssignment](ctx, m)
+	pb, err := gwerrors.Convert(ctx, m, pbmo.ToPB[<% .MixedService %>RegionAssignmentModel, commonpb.<% .MixedService %>RegionAssignment])
 	if err != nil {
 		return nil, err
 	}

@@ -13,7 +13,7 @@ package main
 
 import (
 	"github.com/<% .OrgName %>/<% .ProjectName %>/bootstrap"
-	goconfig "github.com/kamalyes/go-config"
+	goconfig "github.com/kamalyes/go-rpc-gateway/config"
 	"log"
 	"os"
 	"time"

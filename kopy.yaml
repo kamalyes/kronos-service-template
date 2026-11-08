@@ -45,7 +45,7 @@
 # ============================================================================
 
 name: kronos-service
-description: kronos 微服务脚手架模板 - Go gRPC 微服务，接协议中心、pbmo 转换、sqlbuilder 仓储、go-bizerror 错误与 go-argus 校验 | Go gRPC microservice scaffold wired to a contract hub, with pbmo conversion, sqlbuilder repositories, go-bizerror errors and go-argus validation
+description: kronos 微服务脚手架模板 - Go gRPC 微服务，接协议中心、pbmo 转换、sqlbuilder 仓储、go-rpc-gateway/errors 错误与 go-toolbox/pkg/argus 校验 | Go gRPC microservice scaffold wired to a contract hub, with pbmo conversion, sqlbuilder repositories, go-rpc-gateway/errors errors and go-toolbox/pkg/argus validation
 version: 2.0.0
 author: kamalyes
 tags: [go, grpc, microservice, kronos, pbmo, sqlbuilder]

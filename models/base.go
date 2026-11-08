@@ -15,7 +15,7 @@ import (
 	"database/sql/driver"
 
 	commonpb "<% .ShareProtoModule %>/pb/common"
-	"github.com/kamalyes/go-pbmo"
+	"github.com/kamalyes/go-toolbox/pkg/pbmo"
 	sqlbuilder "github.com/kamalyes/go-sqlbuilder"
 )
 

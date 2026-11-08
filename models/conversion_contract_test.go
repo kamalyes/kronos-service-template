@@ -20,7 +20,7 @@ import (
 
 	commonpb "<% .ShareProtoModule %>/pb/common"
 	enumspb "<% .ShareProtoModule %>/pb/enums"
-	pbmo "github.com/kamalyes/go-pbmo"
+	pbmo "github.com/kamalyes/go-toolbox/pkg/pbmo"
 	"gorm.io/gorm/schema"
 	"google.golang.org/protobuf/runtime/protoimpl"
 )

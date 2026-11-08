@@ -21,8 +21,8 @@ import (
 	pb "<% .ShareProtoModule %>/pb/<% .MixedModule %>"
 	commonpb "<% .ShareProtoModule %>/pb/common"
 	enumspb "<% .ShareProtoModule %>/pb/enums"
-	bizerror "github.com/kamalyes/go-bizerror"
-	pbmo "github.com/kamalyes/go-pbmo"
+	gwerrors "github.com/kamalyes/go-rpc-gateway/errors"
+	pbmo "github.com/kamalyes/go-toolbox/pkg/pbmo"
 	gwglobal "github.com/kamalyes/go-rpc-gateway/global"
 	gwmiddleware "github.com/kamalyes/go-rpc-gateway/middleware"
 )
@@ -68,7 +68,7 @@ func (s *<% .MixedService %>Service) <% .MixedService %>Create(
 		return nil, common.DBError(ctx)
 	}
 	if exists {
-		return nil, bizerror.ToGRPCErrorWithTemplate(ctx, errcodes.BizErrCode<% .MixedService | pascal %>AlreadyExists,
+		return nil, gwerrors.ToGRPCErrorWithTemplate(ctx, errcodes.BizErrCode<% .MixedService | pascal %>AlreadyExists,
 			map[string]any{"reason": req.GetCode()})
 	}
 
@@ -130,7 +130,7 @@ func (s *<% .MixedService %>Service) <% .MixedService %>Get(
 		return nil, common.DBError(ctx)
 	}
 	if model == nil {
-		return nil, bizerror.ToGRPCError(ctx, errcodes.BizErrCode<% .MixedService | pascal %>NotFound)
+		return nil, gwerrors.ToGRPCError(ctx, errcodes.BizErrCode<% .MixedService | pascal %>NotFound)
 	}
 
 	info, err := model.ToPB(ctx)
@@ -192,7 +192,7 @@ func (s *<% .MixedService %>Service) <% .MixedService %>Update(
 		return nil, common.DBError(ctx)
 	}
 	if fresh == nil {
-		return nil, bizerror.ToGRPCError(ctx, errcodes.BizErrCode<% .MixedService | pascal %>NotFound)
+		return nil, gwerrors.ToGRPCError(ctx, errcodes.BizErrCode<% .MixedService | pascal %>NotFound)
 	}
 	info, err := fresh.ToPB(ctx)
 	if err != nil {
@@ -245,7 +245,7 @@ func (s *<% .MixedService %>Service) <% .MixedService %>RetrySync(
 		return nil, common.DBError(ctx)
 	}
 	if model == nil {
-		return nil, bizerror.ToGRPCError(ctx, errcodes.BizErrCode<% .MixedService | pascal %>NotFound)
+		return nil, gwerrors.ToGRPCError(ctx, errcodes.BizErrCode<% .MixedService | pascal %>NotFound)
 	}
 
 	// 冻结的 <% .MixedService %> 不触发下游同步：协议中心的状态机是 待激活 → 正常 → 冻结，
@@ -254,18 +254,18 @@ func (s *<% .MixedService %>Service) <% .MixedService %>RetrySync(
 	// 这里用的是「资源当前状态不满足前置条件」而不是「入参不合法」，所以错误码映射到
 	// FailedPrecondition 而不是 InvalidArgument——请求本身没有任何问题
 	// 它也正是那种不显式 Register 就会变成 500 的码：码值不以 _not_found 结尾，
-	// go-bizerror 的后缀规则接不上，兜底是 Internal
+	// go-rpc-gateway/errors 的后缀规则接不上，兜底是 Internal
 	//
 	// [EN] A frozen root does not trigger a downstream sync: the hub's state machine runs
 	// pending to normal to frozen, and frozen means this root has stopped operating, so pushing
 	// it downstream only leaves dirty data at the far end. The condition is the resource's
 	// current state rather than a malformed request, so the code maps to FailedPrecondition
 	// rather than InvalidArgument. It is also exactly the kind of code that becomes a 500
-	// without an explicit Register: the value does not end in _not_found, so go-bizerror's
+	// without an explicit Register: the value does not end in _not_found, so go-rpc-gateway/errors's
 	// suffix rule does not apply and the fallback is Internal
 	frozen := enumspb.<% .MixedService %>Status_<% .MixedService | snake | upper %>_STATUS_FROZEN
 	if model.Status == frozen {
-		return nil, bizerror.ToGRPCErrorWithTemplate(ctx, errcodes.BizErrCode<% .MixedService | pascal %>InvalidStatus,
+		return nil, gwerrors.ToGRPCErrorWithTemplate(ctx, errcodes.BizErrCode<% .MixedService | pascal %>InvalidStatus,
 			map[string]any{"reason": model.Status.String()})
 	}
 
@@ -317,7 +317,7 @@ func (s *<% .MixedService %>Service) <% .MixedService %>RegionAssign(
 		// 缺的是父资源，所以报 <% .MixedService %> 的 not_found，而不是地区分配的
 		// [EN] The parent is what is missing, so this is the root's not-found, not the
 		// assignment's
-		return nil, bizerror.ToGRPCError(ctx, errcodes.BizErrCode<% .MixedService | pascal %>NotFound)
+		return nil, gwerrors.ToGRPCError(ctx, errcodes.BizErrCode<% .MixedService | pascal %>NotFound)
 	}
 
 	if req.GetPrimary() {
@@ -367,7 +367,7 @@ func (s *<% .MixedService %>Service) <% .MixedService %>RegionAssignmentUpdate(
 		// 调用方会以为自己拿错了父 ID，去查一个其实没问题的东西
 		// [EN] The sub-resource's own not-found: reporting the parent's would make the caller
 		// believe it holds the wrong parent id and debug something that is in fact correct
-		return nil, bizerror.ToGRPCError(ctx, errcodes.BizErrCode<% .MixedService | pascal %>RegionAssignmentNotFound)
+		return nil, gwerrors.ToGRPCError(ctx, errcodes.BizErrCode<% .MixedService | pascal %>RegionAssignmentNotFound)
 	}
 
 	if req.GetPrimary() != nil && req.GetPrimary().GetValue() {
@@ -388,7 +388,7 @@ func (s *<% .MixedService %>Service) <% .MixedService %>RegionAssignmentUpdate(
 		return nil, common.DBError(ctx)
 	}
 	if fresh == nil {
-		return nil, bizerror.ToGRPCError(ctx, errcodes.BizErrCode<% .MixedService | pascal %>RegionAssignmentNotFound)
+		return nil, gwerrors.ToGRPCError(ctx, errcodes.BizErrCode<% .MixedService | pascal %>RegionAssignmentNotFound)
 	}
 	pbAssignment, err := fresh.ToPB(ctx)
 	if err != nil {

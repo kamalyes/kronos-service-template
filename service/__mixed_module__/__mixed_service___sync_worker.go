@@ -22,7 +22,7 @@ import (
 	enumspb "<% .ShareProtoModule %>/pb/enums"
 	gwconstants "github.com/kamalyes/go-rpc-gateway/constants"
 	gwglobal "github.com/kamalyes/go-rpc-gateway/global"
-	pbmo "github.com/kamalyes/go-pbmo"
+	pbmo "github.com/kamalyes/go-toolbox/pkg/pbmo"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
 	"google.golang.org/grpc/metadata"

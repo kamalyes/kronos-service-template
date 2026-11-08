@@ -17,7 +17,8 @@ import (
 
 	commonpb "<% .ShareProtoModule %>/pb/common"
 	enumspb "<% .ShareProtoModule %>/pb/enums"
-	bizerror "github.com/kamalyes/go-bizerror"
+	gwerrors "github.com/kamalyes/go-rpc-gateway/errors"
+	pbmo "github.com/kamalyes/go-toolbox/pkg/pbmo"
 	sqlbuilder "github.com/kamalyes/go-sqlbuilder"
 	sqltypes "github.com/kamalyes/go-sqlbuilder/types"
 )
@@ -78,14 +79,14 @@ func (<% .ExampleService %>Model) TableComment() string {
 
 // ToPB 转换为协议中心的 <% .ExampleService %>Info
 //
-// 走 bizerror.ToPB 而不是 pbmo.ToPB：转换失败会被归并成
+// 走 gwerrors.Convert 而不是 pbmo.ToPB：转换失败会被归并成
 // error.conversion_failed 这个业务错误码，带 i18n 文案并映射到 gRPC Internal，
 // 不必在每个调用点自己包一层。
 //
-// [EN] Uses bizerror.ToPB rather than pbmo.ToPB so a failure becomes the
+// [EN] Uses gwerrors.Convert rather than pbmo.ToPB so a failure becomes the
 // error.conversion_failed business code, already localized and mapped to gRPC Internal.
 func (m *<% .ExampleService %>Model) ToPB(ctx context.Context) (*commonpb.<% .ExampleService %>Info, error) {
-	info, err := bizerror.ToPB[<% .ExampleService %>Model, commonpb.<% .ExampleService %>Info](ctx, m)
+	info, err := gwerrors.Convert(ctx, m, pbmo.ToPB[<% .ExampleService %>Model, commonpb.<% .ExampleService %>Info])
 	if err != nil {
 		return nil, err
 	}

@@ -13,7 +13,7 @@ package bootstrap
 import (
 	"fmt"
 	"github.com/<% .OrgName %>/<% .ProjectName %>/migrations"
-	goconfig "github.com/kamalyes/go-config"
+	goconfig "github.com/kamalyes/go-rpc-gateway/config"
 	gwglobal "github.com/kamalyes/go-rpc-gateway/global"
 )
 

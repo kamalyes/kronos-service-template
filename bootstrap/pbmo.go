@@ -14,7 +14,7 @@ import (
 <%- if eq .GenerateExample "true" %>
 	"github.com/<% .OrgName %>/<% .ProjectName %>/models"
 	commonpb "<% .ShareProtoModule %>/pb/common"
-	pbmo "github.com/kamalyes/go-pbmo"
+	pbmo "github.com/kamalyes/go-toolbox/pkg/pbmo"
 <%- end %>
 )
 

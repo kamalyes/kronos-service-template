@@ -21,8 +21,8 @@ import (
 	pb "<% .ShareProtoModule %>/pb/<% .SecondModule %>"
 	commonpb "<% .ShareProtoModule %>/pb/common"
 	enumspb "<% .ShareProtoModule %>/pb/enums"
-	bizerror "github.com/kamalyes/go-bizerror"
-	pbmo "github.com/kamalyes/go-pbmo"
+	gwerrors "github.com/kamalyes/go-rpc-gateway/errors"
+	pbmo "github.com/kamalyes/go-toolbox/pkg/pbmo"
 	gwglobal "github.com/kamalyes/go-rpc-gateway/global"
 )
 
@@ -63,7 +63,7 @@ func (s *<% .SecondService %>Service) <% .SecondService %>Create(
 		return nil, common.DBError(ctx)
 	}
 	if exists {
-		return nil, bizerror.ToGRPCErrorWithTemplate(ctx, errcodes.BizErrCode<% .SecondService | pascal %>AlreadyExists,
+		return nil, gwerrors.ToGRPCErrorWithTemplate(ctx, errcodes.BizErrCode<% .SecondService | pascal %>AlreadyExists,
 			map[string]any{"reason": req.GetCode()})
 	}
 
@@ -108,7 +108,7 @@ func (s *<% .SecondService %>Service) <% .SecondService %>Get(
 		return nil, common.DBError(ctx)
 	}
 	if model == nil {
-		return nil, bizerror.ToGRPCError(ctx, errcodes.BizErrCode<% .SecondService | pascal %>NotFound)
+		return nil, gwerrors.ToGRPCError(ctx, errcodes.BizErrCode<% .SecondService | pascal %>NotFound)
 	}
 
 	info, err := model.ToPB(ctx)
@@ -182,7 +182,7 @@ func (s *<% .SecondService %>Service) <% .SecondService %>Update(
 		return nil, common.DBError(ctx)
 	}
 	if fresh == nil {
-		return nil, bizerror.ToGRPCError(ctx, errcodes.BizErrCode<% .SecondService | pascal %>NotFound)
+		return nil, gwerrors.ToGRPCError(ctx, errcodes.BizErrCode<% .SecondService | pascal %>NotFound)
 	}
 	common.RefreshKV(ctx, fresh)
 
@@ -203,7 +203,7 @@ func (s *<% .SecondService %>Service) <% .SecondService %>UpdateStatus(
 	}
 
 	if req.GetStatus() == enumspb.CommonStatus_COMMON_STATUS_UNSPECIFIED {
-		return nil, bizerror.ToGRPCErrorWithTemplate(ctx, errcodes.BizErrCode<% .SecondService | pascal %>InvalidStatus,
+		return nil, gwerrors.ToGRPCErrorWithTemplate(ctx, errcodes.BizErrCode<% .SecondService | pascal %>InvalidStatus,
 			map[string]any{"reason": req.GetStatus().String()})
 	}
 

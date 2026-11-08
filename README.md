@@ -6,7 +6,7 @@
 
 - **gRPC & HTTP 双协议**：同时支持 gRPC 高性能通信和 RESTful HTTP/JSON 接口
 - **自动化数据库迁移**：基于 go-sqlbuilder Migrator，支持自动建表、索引和表注释
-- **国际化错误处理**：go-bizerror 的通用码 + `errcodes/` 的实体专属码，28 种语言的错误消息
+- **国际化错误处理**：go-rpc-gateway/errors 的通用码 + `errcodes/` 的实体专属码，28 种语言的错误消息
 - **仓库工厂模式**：统一管理数据访问层，支持泛型 BaseRepository
 - **PBMO 模型转换**：Proto ↔ Model 双向自动转换
 - **Snowflake ID 生成**：内置分布式短 ID 生成器
@@ -264,7 +264,7 @@ var TableNameXxx = XxxModel{}.TableName()
 
 两件事要一起做，缺任一件都会出问题
 
-**一、声明常量**码值本身就是 i18n key，形如 `error.<实体>_<语义>`，常量名对齐 go-bizerror 的
+**一、声明常量**码值本身就是 i18n key，形如 `error.<实体>_<语义>`，常量名对齐 go-rpc-gateway/errors 的
 `BizErrCode<实体><语义>`
 
 ```go
@@ -281,7 +281,7 @@ BizErrCodeXxxAlreadyExists: {GRPC: codes.AlreadyExists, Gateway: gwerrors.ErrCod
 BizErrCodeXxxInvalidStatus: {GRPC: codes.InvalidArgument, Gateway: gwerrors.ErrCodeBadRequest},
 ```
 
-go-bizerror 的 `Mapping()` 只认三件事：显式注册过的映射、以 `_not_found` 结尾的码（自动映射成
+go-rpc-gateway/errors 的 `Mapping()` 只认三件事：显式注册过的映射、以 `_not_found` 结尾的码（自动映射成
 `NotFound`）、**其余一律兜底 `Internal`**所以只声明常量不登记映射的话，
 `error.xxx_already_exists` 这种码会以 500 返回，而 500 让调用方以为是服务挂了、于是去重试一个
 永远不会成功的请求
@@ -290,14 +290,14 @@ go-bizerror 的 `Mapping()` 只认三件事：显式注册过的映射、以 `_n
 无字段名字面量，而 CI 里 `go vet ./...` 是独立一步
 
 注册本身不用改任何代码：`bootstrap/errcodes.go` 的 `registerErrorCodes()` 在 `Run()` 的最前面
-调一次 `bizerror.RegisterMany(errcodes.Mappings())`，新增的码自动生效
+调一次 `gwerrors.RegisterMany(errcodes.Mappings())`，新增的码自动生效
 
 ### 9. 国际化 (`locales/*.json`)
 
 新错误码的 key 必须在**全部 28 个**语言文件里都存在，且各文件的键集合完全相等——缺键会让该语言
 在这个 key 上回退到别处
 
-key 放在 `error` 对象下，**不带** `error.` 前缀：go-i18n 加载时按点号把嵌套结构拍平，
+key 放在 `error` 对象下，**不带** `error.` 前缀：go-toolbox/pkg/i18n 加载时按点号把嵌套结构拍平，
 `error` + `xxx_not_found` 合起来就是码值 `error.xxx_not_found`
 
 ```json
@@ -320,9 +320,9 @@ key 放在 `error` 对象下，**不带** `error.` 前缀：go-i18n 加载时按
 ## ⚠️ 重要注意事项
 
 - 模型字段名必须与 Proto 字段名一致，以支持 PBMO 自动转换
-- 用 `bizerror.ToGRPCError()` / `ToGRPCErrorWithTemplate()` 返回错误，不要直接用 `status.Errorf()`
+- 用 `gwerrors.ToGRPCError()` / `ToGRPCErrorWithTemplate()` 返回错误，不要直接用 `status.Errorf()`
 - 实体专属语义（某个实体不存在、某个字段唯一性冲突）用 `errcodes` 里的码，只有确实与实体无关的
-  才用 go-bizerror 的内置通用码（如 `BizErrCodeDatabaseOperationFailed`）——通用码只能回答
+  才用 go-rpc-gateway/errors 的内置通用码（如 `BizErrCodeDatabaseOperationFailed`）——通用码只能回答
   「冲突了」，回答不了「哪个实体的哪个字段冲突了」，而调用方正是靠后者决定下一步怎么做
 - 使用 `service.NewSnowflakeID()` 生成实体 ID
 - i18n 多语言字段使用 `models.LocalizedTextList` 类型

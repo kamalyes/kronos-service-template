@@ -17,7 +17,8 @@ import (
 
 	commonpb "<% .ShareProtoModule %>/pb/common"
 	enumspb "<% .ShareProtoModule %>/pb/enums"
-	bizerror "github.com/kamalyes/go-bizerror"
+	gwerrors "github.com/kamalyes/go-rpc-gateway/errors"
+	pbmo "github.com/kamalyes/go-toolbox/pkg/pbmo"
 )
 
 // <% .SecondService %>Model 对应协议中心 common.<% .SecondService %>Info
@@ -60,15 +61,15 @@ func (m *<% .SecondService %>Model) GetTenantID() string { return m.TenantId }
 
 // ToPB 转换为协议中心的 <% .SecondService %>Info
 func (m *<% .SecondService %>Model) ToPB(ctx context.Context) (*commonpb.<% .SecondService %>Info, error) {
-	return bizerror.ToPB[<% .SecondService %>Model, commonpb.<% .SecondService %>Info](ctx, m)
+	return gwerrors.Convert(ctx, m, pbmo.ToPB[<% .SecondService %>Model, commonpb.<% .SecondService %>Info])
 }
 
 // ToPBs<% .SecondService %> 批量转换
 //
-// 直接用 bizerror.ToPBs：整个切片一次转换，内部复用同一份字段计划，
+// 直接用 gwerrors.ConvertSlice：整个切片一次转换，内部复用同一份字段计划，
 // 不像逐条调用那样每次都走一遍类型断言
-// [EN] bizerror.ToPBs converts the whole slice reusing one field plan
+// [EN] gwerrors.ConvertSlice converts the whole slice reusing one field plan
 func ToPBs<% .SecondService %>(ctx context.Context, items []*<% .SecondService %>Model) ([]*commonpb.<% .SecondService %>Info, error) {
-	return bizerror.ToPBs[<% .SecondService %>Model, commonpb.<% .SecondService %>Info](ctx, items)
+	return gwerrors.ConvertSlice(ctx, items, pbmo.ToPBs[<% .SecondService %>Model, commonpb.<% .SecondService %>Info])
 }
 <%- end %>

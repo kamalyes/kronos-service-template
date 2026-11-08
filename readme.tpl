@@ -9,11 +9,11 @@
 | 组件 | 用途 |
 |------|------|
 | [go-rpc-gateway](https://github.com/kamalyes/go-rpc-gateway) | 框架:gRPC + HTTP 双协议、拦截器链(限流/降载/熔断/i18n/校验)、cpool 连接池 |
-| [go-config](https://github.com/kamalyes/go-config) | 配置加载(环境变量前缀 `<% .ObjectPrefix | upper %>`) |
-| [go-pbmo](https://github.com/kamalyes/go-pbmo) | Model ↔ Protobuf 反射转换,消灭手写 DTO |
+| [config](https://github.com/kamalyes/go-rpc-gateway/tree/master/config) | 配置加载(环境变量前缀 `<% .ObjectPrefix | upper %>`) |
+| [pbmo](https://github.com/kamalyes/go-toolbox/tree/master/pkg/pbmo) | Model ↔ Protobuf 反射转换,消灭手写 DTO |
 | [go-sqlbuilder](https://github.com/kamalyes/go-sqlbuilder) | 泛型 Repository 基类 + 强制参数化查询 |
-| [go-bizerror](https://github.com/kamalyes/go-bizerror) | 业务错误码 → gRPC/网关状态码映射 + 按请求语言取文案 |
-| [go-i18n](https://github.com/kamalyes/go-i18n) | 多语言运行时 |
+| [errors](https://github.com/kamalyes/go-rpc-gateway/tree/master/errors) | 业务错误码 → gRPC/网关状态码映射 + 按请求语言取文案 |
+| [pkg/i18n](https://github.com/kamalyes/go-toolbox/tree/master/pkg/i18n) | 多语言运行时 |
 | <% .ShareProtoModule %> | 协议中心:proto 契约与生成的 pb 代码 |
 
 ## 项目结构
@@ -112,7 +112,7 @@ kronos-codegen check --entity <Name>          # 校验是否都已落地,漂移�
 业务代码只写一行:
 
 ```go
-return nil, bizerror.ToGRPCError(ctx, errcodes.<% .ExampleService %>NotFound)
+return nil, gwerrors.ToGRPCError(ctx, errcodes.<% .ExampleService %>NotFound)
 ```
 
 框架完成:错误码 → 按请求语言取文案 → gRPC status 映射 → HTTP JSON 结构
@@ -123,7 +123,7 @@ return nil, bizerror.ToGRPCError(ctx, errcodes.<% .ExampleService %>NotFound)
 <% .ExampleService %>NotFound = "error.<% .ExampleService | snake %>_not_found"
 ```
 
-⚠️ **除 `_not_found` 结尾的码之外,必须在 `Mappings()` 里显式登记** go-bizerror 只对 `_not_found` 后缀自动映射成 `NotFound`,其余一律兜底 `Internal` —— 也就是说漏登记的 `_already_exists` 会变成 **500 而不是 409**,而且没有任何报错提示
+⚠️ **除 `_not_found` 结尾的码之外,必须在 `Mappings()` 里显式登记** go-rpc-gateway/errors 只对 `_not_found` 后缀自动映射成 `NotFound`,其余一律兜底 `Internal` —— 也就是说漏登记的 `_already_exists` 会变成 **500 而不是 409**,而且没有任何报错提示
 
 新增错误码时同步改两处:`errcodes/codes.go` 的常量与 `Mappings()`,以及 `locales/` 下**全部**语言文件
 

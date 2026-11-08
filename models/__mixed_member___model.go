@@ -17,7 +17,8 @@ import (
 
 	commonpb "<% .ShareProtoModule %>/pb/common"
 	enumspb "<% .ShareProtoModule %>/pb/enums"
-	bizerror "github.com/kamalyes/go-bizerror"
+	gwerrors "github.com/kamalyes/go-rpc-gateway/errors"
+	pbmo "github.com/kamalyes/go-toolbox/pkg/pbmo"
 	sqlbuilder "github.com/kamalyes/go-sqlbuilder"
 )
 
@@ -84,7 +85,7 @@ func (m *<% .MixedService %>MemberModel) SetRoles(roles []enumspb.<% .MixedServi
 // same enum, so pbmo copies it automatically. The contract test asserts this, and it is what
 // turns a renamed enum in the contract into a test failure instead of a silently empty field
 func (m *<% .MixedService %>MemberModel) ToPB(ctx context.Context) (*commonpb.<% .MixedService %>MemberInfo, error) {
-	return bizerror.ToPB[<% .MixedService %>MemberModel, commonpb.<% .MixedService %>MemberInfo](ctx, m)
+	return gwerrors.Convert(ctx, m, pbmo.ToPB[<% .MixedService %>MemberModel, commonpb.<% .MixedService %>MemberInfo])
 }
 
 // ToPBs<% .MixedService %>Member 批量转换
