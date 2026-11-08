@@ -1,8 +1,8 @@
 /*
  * @Author: kamalyes example@qq.com
- * @Date: 2026-11-01 17:05:08
+ * @Date: 2026-11-08 17:05:08
  * @LastEditors: kamalyes example@qq.com
- * @LastEditTime: 2026-11-01 19:28:30
+ * @LastEditTime: 2026-11-08 19:28:30
  * @FilePath: \kronos-my-service\repository\product_repository.go
  * @Description: Product 数据访问层
  *

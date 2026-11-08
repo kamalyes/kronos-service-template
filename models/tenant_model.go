@@ -1,8 +1,8 @@
 /*
  * @Author: kamalyes example@qq.com
- * @Date: 2026-11-01 17:05:08
+ * @Date: 2026-11-08 17:05:08
  * @LastEditors: kamalyes example@qq.com
- * @LastEditTime: 2026-11-01 19:28:30
+ * @LastEditTime: 2026-11-08 19:28:30
  * @FilePath: \kronos-my-service\models\tenant_model.go
  * @Description: Tenant 聚合根与子资源模型
  *
@@ -14,7 +14,8 @@ import (
 	"context"
 	"time"
 
-	bizerror "github.com/kamalyes/go-bizerror"
+	gwerrors "github.com/kamalyes/go-rpc-gateway/errors"
+	pbmo "github.com/kamalyes/go-toolbox/pkg/pbmo"
 	commonpb "github.com/kamalyes/kronos-share-proto-template/pb/common"
 	enumspb "github.com/kamalyes/kronos-share-proto-template/pb/enums"
 )
@@ -73,12 +74,12 @@ func (TenantModel) TableComment() string {
 // [EN] regions is filled by the caller on demand: the list endpoint does not fetch the
 // sub-resource (N+1), only the detail endpoint does
 func (m *TenantModel) ToPB(ctx context.Context) (*commonpb.TenantInfo, error) {
-	return bizerror.ToPB[TenantModel, commonpb.TenantInfo](ctx, m)
+	return gwerrors.Convert(ctx, m, pbmo.ToPB[TenantModel, commonpb.TenantInfo])
 }
 
 // ToPBsTenant 批量转换
 func ToPBsTenant(ctx context.Context, items []*TenantModel) ([]*commonpb.TenantInfo, error) {
-	return bizerror.ToPBs[TenantModel, commonpb.TenantInfo](ctx, items)
+	return gwerrors.ConvertSlice(ctx, items, pbmo.ToPBs[TenantModel, commonpb.TenantInfo])
 }
 
 // TenantRegionAssignmentModel 地区分配，Tenant 的子资源
@@ -119,7 +120,7 @@ func (m *TenantRegionAssignmentModel) GetTenantID() string { return m.TenantId }
 // [EN] IsPrimary and primary do not match by name, so the value is assigned explicitly here;
 // declaring WithFieldMapping at registration works equally well
 func (m *TenantRegionAssignmentModel) ToPB(ctx context.Context) (*commonpb.TenantRegionAssignment, error) {
-	pb, err := bizerror.ToPB[TenantRegionAssignmentModel, commonpb.TenantRegionAssignment](ctx, m)
+	pb, err := gwerrors.Convert(ctx, m, pbmo.ToPB[TenantRegionAssignmentModel, commonpb.TenantRegionAssignment])
 	if err != nil {
 		return nil, err
 	}

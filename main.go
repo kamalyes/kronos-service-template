@@ -1,8 +1,8 @@
 /*
  * @Author: kamalyes example@qq.com
- * @Date: 2026-11-01 17:05:08
+ * @Date: 2026-11-08 17:05:08
  * @LastEditors: kamalyes 501893067@qq.com
- * @LastEditTime: 2026-11-01 19:28:30
+ * @LastEditTime: 2026-11-08 19:28:30
  * @FilePath: \kronos-my-service\main.go
  * @Description: MyService 服务启动器
  *
@@ -12,7 +12,7 @@
 package main
 
 import (
-	goconfig "github.com/kamalyes/go-config"
+	goconfig "github.com/kamalyes/go-rpc-gateway/config"
 	"github.com/kamalyes/kronos-my-service/bootstrap"
 	"log"
 	"os"

@@ -1,8 +1,8 @@
 /*
  * @Author: kamalyes example@qq.com
- * @Date: 2026-11-01 17:05:08
+ * @Date: 2026-11-08 17:05:08
  * @LastEditors: kamalyes example@qq.com
- * @LastEditTime: 2026-11-01 19:28:30
+ * @LastEditTime: 2026-11-08 19:28:30
  * @FilePath: \kronos-my-service\models\product_model.go
  * @Description: Product 数据模型，字段与协议中心的 ProductInfo 对齐
  *
@@ -14,9 +14,10 @@ import (
 	"context"
 	"time"
 
-	bizerror "github.com/kamalyes/go-bizerror"
+	gwerrors "github.com/kamalyes/go-rpc-gateway/errors"
 	sqlbuilder "github.com/kamalyes/go-sqlbuilder"
 	sqltypes "github.com/kamalyes/go-sqlbuilder/types"
+	pbmo "github.com/kamalyes/go-toolbox/pkg/pbmo"
 	commonpb "github.com/kamalyes/kronos-share-proto-template/pb/common"
 	enumspb "github.com/kamalyes/kronos-share-proto-template/pb/enums"
 )
@@ -78,14 +79,14 @@ func (ProductModel) TableComment() string {
 
 // ToPB 转换为协议中心的 ProductInfo
 //
-// 走 bizerror.ToPB 而不是 pbmo.ToPB：转换失败会被归并成
+// 走 gwerrors.Convert 而不是 pbmo.ToPB：转换失败会被归并成
 // error.conversion_failed 这个业务错误码，带 i18n 文案并映射到 gRPC Internal，
 // 不必在每个调用点自己包一层。
 //
-// [EN] Uses bizerror.ToPB rather than pbmo.ToPB so a failure becomes the
+// [EN] Uses gwerrors.Convert rather than pbmo.ToPB so a failure becomes the
 // error.conversion_failed business code, already localized and mapped to gRPC Internal.
 func (m *ProductModel) ToPB(ctx context.Context) (*commonpb.ProductInfo, error) {
-	info, err := bizerror.ToPB[ProductModel, commonpb.ProductInfo](ctx, m)
+	info, err := gwerrors.Convert(ctx, m, pbmo.ToPB[ProductModel, commonpb.ProductInfo])
 	if err != nil {
 		return nil, err
 	}

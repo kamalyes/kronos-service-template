@@ -1,8 +1,8 @@
 /*
  * @Author: kamalyes example@qq.com
- * @Date: 2026-11-01 17:05:08
+ * @Date: 2026-11-08 17:05:08
  * @LastEditors: kamalyes example@qq.com
- * @LastEditTime: 2026-11-01 19:28:30
+ * @LastEditTime: 2026-11-08 19:28:30
  * @FilePath: \kronos-my-service\bootstrap\pbmo.go
  * @Description: Model-PB 转换器注册
  *
@@ -11,7 +11,7 @@
 package bootstrap
 
 import (
-	pbmo "github.com/kamalyes/go-pbmo"
+	pbmo "github.com/kamalyes/go-toolbox/pkg/pbmo"
 	"github.com/kamalyes/kronos-my-service/models"
 	commonpb "github.com/kamalyes/kronos-share-proto-template/pb/common"
 )

@@ -1,8 +1,8 @@
 /*
  * @Author: kamalyes example@qq.com
- * @Date: 2026-11-01 18:10:33
+ * @Date: 2026-11-08 18:10:33
  * @LastEditors: kamalyes example@qq.com
- * @LastEditTime: 2026-11-01 19:30:27
+ * @LastEditTime: 2026-11-08 19:30:27
  * @FilePath: \kronos-my-service\models\conversion_contract_test.go
  * @Description: Model-PB 转换契约测试，守住字段映射不随协议演进而断裂
  *
@@ -17,7 +17,7 @@ import (
 	"testing"
 	"time"
 
-	pbmo "github.com/kamalyes/go-pbmo"
+	pbmo "github.com/kamalyes/go-toolbox/pkg/pbmo"
 	commonpb "github.com/kamalyes/kronos-share-proto-template/pb/common"
 	enumspb "github.com/kamalyes/kronos-share-proto-template/pb/enums"
 	"google.golang.org/protobuf/runtime/protoimpl"

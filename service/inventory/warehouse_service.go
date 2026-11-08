@@ -1,8 +1,8 @@
 /*
  * @Author: kamalyes example@qq.com
- * @Date: 2026-11-01 17:05:08
+ * @Date: 2026-11-08 17:05:08
  * @LastEditors: kamalyes example@qq.com
- * @LastEditTime: 2026-11-01 19:28:30
+ * @LastEditTime: 2026-11-08 19:28:30
  * @FilePath: \kronos-my-service\service\inventory\warehouse_service.go
  * @Description: Warehouse 业务逻辑层，实现协议中心的 WarehouseServiceServer
  *
@@ -13,9 +13,9 @@ package inventory
 import (
 	"context"
 
-	bizerror "github.com/kamalyes/go-bizerror"
-	pbmo "github.com/kamalyes/go-pbmo"
+	gwerrors "github.com/kamalyes/go-rpc-gateway/errors"
 	gwglobal "github.com/kamalyes/go-rpc-gateway/global"
+	pbmo "github.com/kamalyes/go-toolbox/pkg/pbmo"
 	"github.com/kamalyes/kronos-my-service/errcodes"
 	"github.com/kamalyes/kronos-my-service/models"
 	"github.com/kamalyes/kronos-my-service/repository"
@@ -62,7 +62,7 @@ func (s *WarehouseService) WarehouseCreate(
 		return nil, common.DBError(ctx)
 	}
 	if exists {
-		return nil, bizerror.ToGRPCErrorWithTemplate(ctx, errcodes.BizErrCodeWarehouseAlreadyExists,
+		return nil, gwerrors.ToGRPCErrorWithTemplate(ctx, errcodes.BizErrCodeWarehouseAlreadyExists,
 			map[string]any{"reason": req.GetCode()})
 	}
 
@@ -107,7 +107,7 @@ func (s *WarehouseService) WarehouseGet(
 		return nil, common.DBError(ctx)
 	}
 	if model == nil {
-		return nil, bizerror.ToGRPCError(ctx, errcodes.BizErrCodeWarehouseNotFound)
+		return nil, gwerrors.ToGRPCError(ctx, errcodes.BizErrCodeWarehouseNotFound)
 	}
 
 	info, err := model.ToPB(ctx)
@@ -181,7 +181,7 @@ func (s *WarehouseService) WarehouseUpdate(
 		return nil, common.DBError(ctx)
 	}
 	if fresh == nil {
-		return nil, bizerror.ToGRPCError(ctx, errcodes.BizErrCodeWarehouseNotFound)
+		return nil, gwerrors.ToGRPCError(ctx, errcodes.BizErrCodeWarehouseNotFound)
 	}
 	common.RefreshKV(ctx, fresh)
 
@@ -202,7 +202,7 @@ func (s *WarehouseService) WarehouseUpdateStatus(
 	}
 
 	if req.GetStatus() == enumspb.CommonStatus_COMMON_STATUS_UNSPECIFIED {
-		return nil, bizerror.ToGRPCErrorWithTemplate(ctx, errcodes.BizErrCodeWarehouseInvalidStatus,
+		return nil, gwerrors.ToGRPCErrorWithTemplate(ctx, errcodes.BizErrCodeWarehouseInvalidStatus,
 			map[string]any{"reason": req.GetStatus().String()})
 	}
 
